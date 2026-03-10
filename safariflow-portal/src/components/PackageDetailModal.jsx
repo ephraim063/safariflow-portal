@@ -13,10 +13,10 @@ const categoryColors = {
   'Adventure & Hiking': { bg: 'rgba(50,180,150,0.15)', color: '#32B496' },
 }
 
-export default function PackageDetailModal({ pkg, onClose }) {
+export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
   const [showQuickQuote, setShowQuickQuote] = useState(false)
   const catStyle = categoryColors[pkg.category] || { bg: 'var(--gold-dim)', color: 'var(--gold)' }
-  const imgUrl = `https://source.unsplash.com/800x400/?${pkg.image_query}`
+  const imgUrl = pkgImage || 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80'
 
   const inclusions = pkg.inclusions.split(',').map(s => s.trim())
   const exclusions = pkg.exclusions.split(',').map(s => s.trim())
