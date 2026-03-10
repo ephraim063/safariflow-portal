@@ -10,8 +10,8 @@ import {
 } from 'lucide-react'
 import { MOCK_QUOTES, MONTHLY_DATA } from '../data/mockData'
 
-const fmt = (n) => `R ${(n / 1000).toFixed(0)}k`
-const fmtFull = (n) => `R ${n.toLocaleString()}`
+const fmt = (n) => `$ ${(n / 1000).toFixed(0)}k`
+const fmtFull = (n) => `$ ${n.toLocaleString()}`
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {

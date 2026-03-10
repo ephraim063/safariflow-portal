@@ -21,7 +21,7 @@ export default function NewQuote() {
     travel_dates: '',
     num_travelers: 2,
     notes: 'This quote is valid for 14 days. A 50% deposit is required to confirm your booking.',
-    currency_symbol: 'R',
+    currency_symbol: '$',
   })
 
   const [items, setItems] = useState([{ ...EMPTY_ITEM }])
@@ -51,7 +51,7 @@ export default function NewQuote() {
     valid_until: new Date(Date.now() + 14 * 86400000).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
     agent_name: 'Ibrahim',
     agent_email: 'ephraim063@gmail.com',
-    currency: 'ZAR',
+    currency: 'USD',
     items: items.map(i => ({
       ...i,
       unit_price: parseFloat(i.unit_price) || 0,

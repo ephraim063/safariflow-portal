@@ -5,7 +5,7 @@ import { MOCK_QUOTES } from '../data/mockData'
 import { StatusBadge } from './Dashboard'
 import QuoteDetailModal from '../components/QuoteDetailModal'
 
-const fmtFull = (n) => `R ${n.toLocaleString()}`
+const fmtFull = (n) => `$ ${n.toLocaleString()}`
 
 export default function Quotes() {
   const [search, setSearch] = useState('')

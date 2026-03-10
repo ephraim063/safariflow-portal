@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Search, Users, TrendingUp } from 'lucide-react'
 import { MOCK_CLIENTS } from '../data/mockData'
 
-const fmtFull = (n) => `R ${n.toLocaleString()}`
+const fmtFull = (n) => `$ ${n.toLocaleString()}`
 
 export default function Clients() {
   const [search, setSearch] = useState('')
