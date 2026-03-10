@@ -3,7 +3,7 @@ import { ArrowLeft, Download, CheckCircle, Users, Calendar, DollarSign } from 'l
 
 const API_URL = import.meta.env.VITE_API_URL
 const API_KEY = import.meta.env.VITE_API_KEY
-const fmtPrice = (n) => `R ${Number(n).toLocaleString()}`
+const fmtPrice = (n) => `$ ${Number(n).toLocaleString()}`
 
 export default function QuickQuoteModal({ pkg, onClose, onBack }) {
   const [loading, setLoading] = useState(false)
@@ -85,8 +85,8 @@ export default function QuickQuoteModal({ pkg, onClose, onBack }) {
     destination: `${pkg.destination}, ${pkg.country}`,
     travel_dates: form.travel_dates,
     num_travelers: form.num_travelers,
-    currency: 'ZAR',
-    currency_symbol: 'R',
+    currency: 'USD',
+    currency_symbol: '$',
     items: buildItems(),
     notes: `${form.notes}\n\nPackage includes: ${pkg.inclusions}\n\nNot included: ${pkg.exclusions}`,
   })

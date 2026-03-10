@@ -4,7 +4,7 @@ import { StatusBadge } from '../pages/Dashboard'
 
 const API_URL = import.meta.env.VITE_API_URL
 const API_KEY = import.meta.env.VITE_API_KEY
-const fmtFull = (n) => `R ${Number(n).toLocaleString()}`
+const fmtFull = (n) => `$ ${Number(n).toLocaleString()}`
 
 export default function QuoteDetailModal({ quote, onClose }) {
   const [sending, setSending] = useState(false)
