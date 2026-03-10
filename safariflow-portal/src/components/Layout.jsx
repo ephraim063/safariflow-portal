@@ -18,6 +18,7 @@ export default function Layout({ children }) {
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/packages', icon: Globe, label: 'Packages' },
     { path: '/quotes', icon: FileText, label: 'All Quotes', badge: null },
     { path: '/quotes/new', icon: Plus, label: 'New Quote' },
     { path: '/clients', icon: Users, label: 'Clients' },
