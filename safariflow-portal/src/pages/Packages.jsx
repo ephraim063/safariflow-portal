@@ -94,111 +94,154 @@ const categoryColors = {
 
 function PackageCard({ pkg, onClick }) {
   const imgUrl = PKG_IMAGES[pkg.id]
-  const catStyle = categoryColors[pkg.category] || { bg: 'var(--gold-dim)', color: 'var(--gold)' }
+  const catStyle = categoryColors[pkg.category] || { bg: '#FBF6EE', color: '#C8A96E' }
   const [imgError, setImgError] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   return (
     <div
       onClick={() => onClick(pkg)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'var(--card)', border: '1px solid var(--border)',
-        borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
+        background: '#FFFFFF',
+        border: `1px solid ${hovered ? '#C8A96E' : '#E8E4DE'}`,
+        borderRadius: 16,
+        overflow: 'hidden',
+        cursor: 'pointer',
         transition: 'all 0.25s cubic-bezier(0.4,0,0.2,1)',
-        display: 'flex', flexDirection: 'column',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-4px)'
-        e.currentTarget.style.borderColor = 'rgba(200,169,110,0.35)'
-        e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.4)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.borderColor = 'var(--border)'
-        e.currentTarget.style.boxShadow = 'none'
+        display: 'flex',
+        flexDirection: 'column',
+        transform: hovered ? 'translateY(-5px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? '0 20px 50px rgba(13,30,53,0.15), 0 4px 12px rgba(200,169,110,0.2)'
+          : '0 2px 12px rgba(13,30,53,0.07)',
       }}
     >
       {/* Image */}
-      <div style={{ position: 'relative', height: 190, overflow: 'hidden', background: 'var(--surface)' }}>
+      <div style={{ position: 'relative', height: 200, overflow: 'hidden', background: '#F0EDE8' }}>
         {!imgError ? (
           <img
             src={imgUrl}
             alt={pkg.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+              transition: 'transform 0.4s ease',
+              transform: hovered ? 'scale(1.05)' : 'scale(1)',
+            }}
             onError={() => setImgError(true)}
           />
         ) : (
           <div style={{
-            width: '100%', height: '100%', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', fontSize: 40,
-            background: 'linear-gradient(135deg, var(--surface), var(--card))'
-          }}>
-            🌍
-          </div>
+            width: '100%', height: '100%', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            fontSize: 48, background: 'linear-gradient(135deg, #F0EDE8, #E8E4DC)'
+          }}>🌍</div>
         )}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
+
+        {/* Subtle gradient overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to top, rgba(13,30,53,0.55) 0%, transparent 50%)'
+        }} />
+
+        {/* Category badge */}
         <div style={{
           position: 'absolute', top: 12, left: 12,
-          background: catStyle.bg, color: catStyle.color,
-          backdropFilter: 'blur(10px)', padding: '4px 10px', borderRadius: 20,
-          fontSize: 10, fontWeight: 600, letterSpacing: 0.5,
-          border: `1px solid ${catStyle.color}40`
+          background: 'rgba(255,255,255,0.92)',
+          color: catStyle.color,
+          backdropFilter: 'blur(8px)',
+          padding: '4px 11px', borderRadius: 20,
+          fontSize: 10, fontWeight: 700, letterSpacing: 0.8,
+          border: `1px solid ${catStyle.color}30`,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         }}>
           {pkg.category}
         </div>
+
+        {/* Duration badge */}
         <div style={{
           position: 'absolute', top: 12, right: 12,
-          background: 'rgba(0,0,0,0.55)', color: 'white', backdropFilter: 'blur(8px)',
-          padding: '4px 10px', borderRadius: 20, fontSize: 10, fontWeight: 500,
+          background: 'rgba(13,30,53,0.75)',
+          color: '#E8C98E',
+          backdropFilter: 'blur(8px)',
+          padding: '4px 10px', borderRadius: 20,
+          fontSize: 10, fontWeight: 600,
           display: 'flex', alignItems: 'center', gap: 4,
-          border: '1px solid rgba(255,255,255,0.1)'
+          border: '1px solid rgba(200,169,110,0.25)',
         }}>
           <Clock size={10} /> {pkg.duration} nights
         </div>
+
+        {/* Location on image */}
         <div style={{
           position: 'absolute', bottom: 12, left: 12,
-          color: 'white', fontSize: 13, fontWeight: 600,
-          textShadow: '0 1px 6px rgba(0,0,0,0.9)'
+          color: 'white', fontSize: 12, fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 4,
+          textShadow: '0 1px 4px rgba(0,0,0,0.8)',
         }}>
           📍 {pkg.destination}, {pkg.country}
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {/* Card Content — light background */}
+      <div style={{
+        padding: '18px 20px', flex: 1,
+        display: 'flex', flexDirection: 'column',
+        background: '#FFFFFF',
+      }}>
         <h3 style={{
-          fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 600,
-          color: 'var(--text)', marginBottom: 8, lineHeight: 1.3
+          fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700,
+          color: '#0D1E35', marginBottom: 7, lineHeight: 1.3,
         }}>
           {pkg.name}
         </h3>
+
         <p style={{
-          fontSize: 12, color: 'var(--text-mid)', lineHeight: 1.6, marginBottom: 14, flex: 1,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+          fontSize: 12.5, color: '#777770', lineHeight: 1.65,
+          marginBottom: 16, flex: 1,
+          display: '-webkit-box', WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical', overflow: 'hidden',
         }}>
           {pkg.highlights}
         </p>
+
+        {/* Price + CTA row */}
         <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
-          paddingTop: 12, borderTop: '1px solid var(--border)'
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          paddingTop: 14, borderTop: '1px solid #F0EDE8',
         }}>
           <div>
-            <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 2, letterSpacing: 0.5 }}>
-              FROM · {pkg.price_type.toUpperCase()}
+            <div style={{
+              fontSize: 9.5, color: '#AAAAAA', marginBottom: 2,
+              letterSpacing: 1, fontWeight: 600, textTransform: 'uppercase',
+            }}>
+              From · {pkg.price_type}
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--gold)', lineHeight: 1 }}>
+            <div style={{
+              fontFamily: 'var(--font-display)', fontSize: 22,
+              fontWeight: 700, color: '#C8A96E', lineHeight: 1,
+            }}>
               {fmtPrice(pkg.base_price)}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Users size={11} /> {pkg.max_travelers}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              fontSize: 11, color: '#AAAAAA',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              <Users size={11} /> max {pkg.max_travelers}
             </div>
             <div style={{
-              width: 30, height: 30, borderRadius: '50%',
-              background: 'var(--gold-dim)', border: '1px solid rgba(200,169,110,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
+              width: 34, height: 34, borderRadius: '50%',
+              background: hovered ? '#C8A96E' : '#FBF6EE',
+              border: `1px solid ${hovered ? '#C8A96E' : '#E8C98E'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              boxShadow: hovered ? '0 4px 12px rgba(200,169,110,0.4)' : 'none',
             }}>
-              <ChevronRight size={14} color="var(--gold)" />
+              <ChevronRight size={15} color={hovered ? '#fff' : '#C8A96E'} />
             </div>
           </div>
         </div>
@@ -245,12 +288,36 @@ export default function Packages() {
       </div>
 
       <div className="page-body">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div className="search-bar">
-            <Search size={14} color="var(--text-dim)" />
-            <input placeholder="Search packages, destinations..." value={search} onChange={e => setSearch(e.target.value)} />
+        {/* Search + Sort row */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: '#FFFFFF', border: '1px solid #E8E4DE',
+            borderRadius: 10, padding: '8px 14px', flex: 1, minWidth: 220,
+            boxShadow: '0 1px 4px rgba(13,30,53,0.06)',
+          }}>
+            <Search size={14} color="#AAAAAA" />
+            <input
+              placeholder="Search packages, destinations..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                border: 'none', outline: 'none', background: 'transparent',
+                fontSize: 13, color: '#0D1E35', width: '100%',
+                fontFamily: 'var(--font-body)',
+              }}
+            />
           </div>
-          <select className="form-select" style={{ width: 160, padding: '8px 12px' }} value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <select
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value)}
+            style={{
+              padding: '9px 14px', borderRadius: 10, border: '1px solid #E8E4DE',
+              background: '#FFFFFF', fontSize: 13, color: '#0D1E35',
+              fontFamily: 'var(--font-body)', cursor: 'pointer',
+              boxShadow: '0 1px 4px rgba(13,30,53,0.06)',
+            }}
+          >
             <option value="name">Sort: Name</option>
             <option value="price_asc">Price: Low → High</option>
             <option value="price_desc">Price: High → Low</option>
@@ -258,15 +325,18 @@ export default function Packages() {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* Category filter pills */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 26, flexWrap: 'wrap' }}>
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setCategory(cat)} style={{
-              padding: '6px 16px', borderRadius: 20, border: '1px solid',
-              borderColor: category === cat ? 'var(--gold)' : 'var(--border)',
-              background: category === cat ? 'var(--gold-dim)' : 'transparent',
-              color: category === cat ? 'var(--gold)' : 'var(--text-mid)',
-              fontSize: 12, fontWeight: 500, cursor: 'pointer',
-              transition: 'all 0.2s ease', fontFamily: 'var(--font-body)'
+              padding: '7px 18px', borderRadius: 20,
+              border: `1px solid ${category === cat ? '#C8A96E' : '#E8E4DE'}`,
+              background: category === cat ? '#C8A96E' : '#FFFFFF',
+              color: category === cat ? '#FFFFFF' : '#777770',
+              fontSize: 12, fontWeight: category === cat ? 700 : 500,
+              cursor: 'pointer', transition: 'all 0.2s ease',
+              fontFamily: 'var(--font-body)',
+              boxShadow: category === cat ? '0 4px 12px rgba(200,169,110,0.3)' : 'none',
             }}>
               {cat}
             </button>
