@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import {
   LayoutDashboard, FileText, Plus, Users,
-  Settings, LogOut, Globe, Menu, X
+  Settings, LogOut, Globe, Menu, X, Package, Database
 } from 'lucide-react'
 import Toast from './Toast'
 import { useToast } from '../hooks/useToast'
@@ -24,6 +24,7 @@ export default function Layout({ children }) {
     { path: '/quotes', icon: FileText, label: 'All Quotes' },
     { path: '/quotes/new', icon: Plus, label: 'New Quote' },
     { path: '/clients', icon: Users, label: 'Clients' },
+    { path: '/inventory', icon: Database, label: 'My Inventory' },
   ]
 
   const isActive = (path) => {
@@ -161,7 +162,6 @@ export default function Layout({ children }) {
 
       <Toast toasts={toasts} removeToast={removeToast} />
 
-      {/* Mobile responsive styles injected */}
       <style>{`
         @media (max-width: 768px) {
           .sidebar { display: none !important; }
