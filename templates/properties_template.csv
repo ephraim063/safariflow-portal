@@ -1,0 +1,5 @@
+name,destination,country,category,star_rating,room_type,meal_plan,season_type,price_per_person_usd,child_price_per_person_usd,child_age_min,child_age_max,single_supplement_usd,min_nights,highlights,contact_email,contact_phone,is_active
+Angama Mara,Masai Mara,Kenya,luxury,5,Tented Suite,Full Board,high,1950,975,2,12,500,2,Infinity pool with Mara views. Hot air balloon. Bush walks.,reservations@angama.com,+254 722 000 001,true
+Tortilis Camp,Amboseli,Kenya,luxury,5,Luxury Tent,Full Board,high,1650,825,2,12,400,2,Kilimanjaro views. Pool. Big Five.,reservations@tortilis.com,+254 722 000 002,true
+Ol Tukai Lodge,Amboseli,Kenya,mid,3,Standard Room,Full Board,high,850,425,2,12,200,1,Kilimanjaro views. Pool. Family friendly.,info@oltukai.com,+254 722 000 003,true
+Sarova Mara Game Camp,Masai Mara,Kenya,mid,4,Standard Tent,Full Board,high,950,475,2,12,250,2,Game drives. Pool. Close to Talek gate.,reservations@sarova.com,+254 722 000 004,true
