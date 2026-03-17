@@ -7,6 +7,7 @@ import NewQuote from './pages/NewQuote'
 import Clients from './pages/Clients'
 import Packages from './pages/Packages'
 import Settings from './pages/Settings'
+import Inventory from './pages/Inventory'
 
 const Protected = ({ children }) => (
   <>
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/quotes" element={<Protected><Quotes /></Protected>} />
         <Route path="/quotes/new" element={<Protected><NewQuote /></Protected>} />
         <Route path="/clients" element={<Protected><Clients /></Protected>} />
+        <Route path="/inventory" element={<Protected><Inventory /></Protected>} />
         <Route path="/settings" element={<Protected><Settings /></Protected>} />
       </Routes>
     </BrowserRouter>
