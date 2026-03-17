@@ -1,149 +1,251 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { Search, Plus, Eye, Download, RefreshCw } from 'lucide-react'
+import { supabaseFetch } from '../hooks/useSupabase'
+import { StatusBadge } from './Dashboard'
 import { useUser } from '@clerk/clerk-react'
-import { Save, CheckCircle } from 'lucide-react'
 
-export default function Settings() {
+const fmtFull = (n) => `$ ${Number(n || 0).toLocaleString()}`
+
+export default function Quotes() {
   const { user } = useUser()
-  const [saved, setSaved] = useState(false)
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('All')
+  const [selected, setSelected] = useState(null)
+  const [agentId, setAgentId] = useState(null)
 
-  const [settings, setSettings] = useState({
-    agency_name: 'SafariFlow',
-    agent_name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '',
-    agent_email: user?.emailAddresses?.[0]?.emailAddress || '',
-    agent_phone: '',
-    currency: 'ZAR',
-    currency_symbol: 'R',
-    quote_validity: '14',
-    deposit_percent: '50',
-    api_url: import.meta.env.VITE_API_URL || '',
+  const statuses = ['All', 'generated', 'sent', 'accepted', 'revision_requested', 'confirmed']
+  const statusLabels = {
+    All: 'All',
+    generated: 'Generated',
+    sent: 'Sent',
+    accepted: 'Accepted',
+    revision_requested: 'Revision',
+    confirmed: 'Confirmed'
+  }
+
+  useEffect(() => {
+    if (!user?.id) return
+    const load = async () => {
+      try {
+        const agents = await supabaseFetch('agents', { clerk_user_id: `eq.${user.id}`, select: 'id' })
+        if (!agents.length) return
+        const aid = agents[0].id
+        setAgentId(aid)
+        const q = await supabaseFetch('quotes', {
+          agent_id: `eq.${aid}`,
+          select: '*',
+          order: 'created_at.desc'
+        })
+        setQuotes(q)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [user?.id])
+
+  const filtered = quotes.filter(q => {
+    const matchSearch =
+      (q.client_name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (q.quote_number || '').toLowerCase().includes(search.toLowerCase()) ||
+      (Array.isArray(q.destinations) ? q.destinations.join(', ') : q.destinations || '').toLowerCase().includes(search.toLowerCase())
+    const matchFilter = filter === 'All' || q.status === filter
+    return matchSearch && matchFilter
   })
 
-  const set = (key, val) => setSettings(s => ({ ...s, [key]: val }))
+  const totalValue = filtered.reduce((s, q) => s + (q.total_price_usd_cents || 0) / 100, 0)
 
-  const handleSave = () => {
-    // In production: save to backend/localStorage
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const handleDownloadPDF = async (quote) => {
+    if (!quote.pdf_url) return alert('PDF not available for this quote.')
+    window.open(quote.pdf_url, '_blank')
   }
 
   return (
     <div>
       <div className="page-header">
-        <h1 className="page-title">Settings</h1>
-        <p className="page-subtitle">Configure your agency and quote defaults</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 className="page-title">All Quotes</h1>
+            <p className="page-subtitle">
+              {filtered.length} quotes · Pipeline: <span style={{ color: 'var(--gold)' }}>{fmtFull(totalValue)}</span>
+            </p>
+          </div>
+          <Link to="/quotes/new" className="btn btn-primary">
+            <Plus size={15} /> New Quote
+          </Link>
+        </div>
       </div>
 
-      <div className="page-body" style={{ maxWidth: 700 }}>
-        {saved && (
-          <div style={{
-            background: 'rgba(74,124,89,0.1)', border: '1px solid rgba(74,124,89,0.3)',
-            borderRadius: 8, padding: '12px 16px', marginBottom: 20,
-            fontSize: 13, color: 'var(--sage-light)',
-            display: 'flex', alignItems: 'center', gap: 8
-          }}>
-            <CheckCircle size={15} />
-            Settings saved successfully!
+      <div className="page-body">
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
+            <Search size={14} color="var(--text-dim)" />
+            <input
+              placeholder="Search client, destination, quote ID..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
-        )}
-
-        {/* Agency */}
-        <div className="card" style={{ marginBottom: 20 }}>
-          <h3 style={{
-            fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600,
-            marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border)'
-          }}>
-            Agency Details
-          </h3>
-          <div className="form-group">
-            <label className="form-label">Agency Name</label>
-            <input className="form-input" value={settings.agency_name}
-              onChange={e => set('agency_name', e.target.value)} />
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Your Name</label>
-              <input className="form-input" value={settings.agent_name}
-                onChange={e => set('agent_name', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Your Email</label>
-              <input className="form-input" value={settings.agent_email}
-                onChange={e => set('agent_email', e.target.value)} />
-            </div>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Phone Number</label>
-            <input className="form-input" placeholder="+27 XX XXX XXXX"
-              value={settings.agent_phone} onChange={e => set('agent_phone', e.target.value)} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {statuses.map(s => (
+              <button
+                key={s}
+                className={`btn ${filter === s ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '7px 14px', fontSize: 12 }}
+                onClick={() => setFilter(s)}
+              >
+                {statusLabels[s]}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Quote Defaults */}
-        <div className="card" style={{ marginBottom: 20 }}>
-          <h3 style={{
-            fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600,
-            marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border)'
-          }}>
-            Quote Defaults
-          </h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Currency</label>
-              <select className="form-select" value={settings.currency}
-                onChange={e => set('currency', e.target.value)}>
-                <option value="ZAR">ZAR - South African Rand</option>
-                <option value="USD">USD - US Dollar</option>
-                <option value="EUR">EUR - Euro</option>
-                <option value="GBP">GBP - British Pound</option>
-                <option value="KES">KES - Kenyan Shilling</option>
-              </select>
+        {/* Table */}
+        <div className="table-container">
+          {loading ? (
+            <div className="empty-state">
+              <div className="spinner" style={{ width: 28, height: 28, margin: '0 auto 12px' }} />
+              <div className="empty-state-text">Loading quotes...</div>
             </div>
-            <div className="form-group">
-              <label className="form-label">Currency Symbol</label>
-              <input className="form-input" value={settings.currency_symbol}
-                onChange={e => set('currency_symbol', e.target.value)} />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Quote Valid For (days)</label>
-              <input className="form-input" type="number"
-                value={settings.quote_validity} onChange={e => set('quote_validity', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Deposit Required (%)</label>
-              <input className="form-input" type="number"
-                value={settings.deposit_percent} onChange={e => set('deposit_percent', e.target.value)} />
-            </div>
-          </div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Quote ID</th>
+                  <th>Client</th>
+                  <th>Destination</th>
+                  <th>Travel Dates</th>
+                  <th>Travelers</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8}>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">🗂️</div>
+                        <div className="empty-state-text">No quotes found</div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filtered.map((quote, i) => (
+                  <tr key={quote.id} style={{ animationDelay: `${i * 40}ms` }}>
+                    <td>
+                      <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gold)', background: 'var(--gold-dim)', padding: '2px 8px', borderRadius: 4 }}>
+                        {quote.quote_number || quote.id.slice(0, 8)}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 500 }}>{quote.client_name || '—'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-mid)' }}>{quote.client_email || ''}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 500 }}>
+                        {Array.isArray(quote.destinations) ? quote.destinations.join(', ') : quote.destinations || '—'}
+                      </div>
+                    </td>
+                    <td style={{ fontSize: 12, color: 'var(--text-mid)' }}>
+                      {quote.start_date} {quote.end_date ? `→ ${quote.end_date}` : ''}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {(quote.pax_adults || 0) + (quote.pax_children || 0) || '—'}
+                    </td>
+                    <td>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--gold)' }}>
+                        {fmtFull((quote.total_price_usd_cents || 0) / 100)}
+                      </span>
+                    </td>
+                    <td><StatusBadge status={quote.status} /></td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        {quote.pdf_url && (
+                          <button
+                            className="btn btn-ghost"
+                            style={{ padding: '5px 8px' }}
+                            onClick={() => handleDownloadPDF(quote)}
+                            title="Download PDF"
+                          >
+                            <Download size={14} />
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-ghost"
+                          style={{ padding: '5px 8px' }}
+                          onClick={() => setSelected(quote)}
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-
-        {/* API Config */}
-        <div className="card" style={{ marginBottom: 28 }}>
-          <h3 style={{
-            fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600,
-            marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--border)'
-          }}>
-            API Configuration
-          </h3>
-          <div className="form-group">
-            <label className="form-label">Flask API URL</label>
-            <input className="form-input" value={settings.api_url}
-              onChange={e => set('api_url', e.target.value)} />
-          </div>
-          <div style={{
-            background: 'var(--gold-dim)', border: '1px solid rgba(200,169,110,0.2)',
-            borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--gold)'
-          }}>
-            💡 API Key is stored as an environment variable on Netlify for security.
-          </div>
-        </div>
-
-        <button className="btn btn-primary" style={{ padding: '11px 24px' }} onClick={handleSave}>
-          <Save size={15} />
-          Save Settings
-        </button>
       </div>
+
+      {/* Quote Detail Modal */}
+      {selected && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="modal"
+            style={{ background: 'var(--card)', borderRadius: 16, padding: 32, maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+              <div>
+                <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gold)', background: 'var(--gold-dim)', padding: '2px 8px', borderRadius: 4 }}>
+                  {selected.quote_number}
+                </span>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, marginTop: 8 }}>
+                  {selected.client_name}
+                </h2>
+              </div>
+              <button className="btn btn-ghost" style={{ padding: '6px 10px' }} onClick={() => setSelected(null)}>✕</button>
+            </div>
+
+            {[
+              { label: 'Destination', value: Array.isArray(selected.destinations) ? selected.destinations.join(', ') : selected.destinations },
+              { label: 'Travel Dates', value: `${selected.start_date} → ${selected.end_date}` },
+              { label: 'Duration', value: `${selected.duration_days} days` },
+              { label: 'Travelers', value: `${selected.pax_adults || 0} adults, ${selected.pax_children || 0} children` },
+              { label: 'Accommodation', value: selected.accommodation_tier },
+              { label: 'Total Value', value: fmtFull((selected.total_price_usd_cents || 0) / 100) },
+              { label: 'Status', value: <StatusBadge status={selected.status} /> },
+              { label: 'Created', value: new Date(selected.created_at).toLocaleDateString() },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontSize: 13, color: 'var(--text-mid)' }}>{label}</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }}>{value || '—'}</span>
+              </div>
+            ))}
+
+            {selected.pdf_url && (
+              <button
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center', marginTop: 20 }}
+                onClick={() => window.open(selected.pdf_url, '_blank')}
+              >
+                <Download size={15} /> Download PDF
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
