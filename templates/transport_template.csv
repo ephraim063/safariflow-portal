@@ -1,0 +1,8 @@
+from_location,to_location,transport_type,vehicle_type,operator_name,price_per_person_usd,child_price_per_person_usd,child_age_min,child_age_max,max_pax_per_vehicle,duration_hours,is_shared,notes,is_active
+Nairobi (Wilson),Masai Mara,fly,Cessna,SafariAir,450,225,2,12,4,1,false,Includes 15kg luggage. Departs 8am/11am/2pm.,true
+Nairobi (Wilson),Amboseli,fly,Cessna,SafariAir,380,190,2,12,4,0.75,false,Includes 15kg luggage. Departs 8am/2pm.,true
+Masai Mara,Amboseli,fly,Cessna,SafariAir,350,175,2,12,4,1,false,Via Wilson Airport.,true
+Nairobi,Masai Mara,road,Land Cruiser 4x4,Ground Transfer,150,75,2,12,6,5,false,Departs 7am. Road transfer via B3 highway.,true
+Nairobi (JKIA),Nairobi City,road,Van/Minibus,Airport Transfer,50,25,2,12,8,1,true,Shared airport transfer.,true
+Nairobi,Amboseli,road,Land Cruiser 4x4,Ground Transfer,120,60,2,12,6,4,false,Departs 7am. Road transfer.,true
+Mombasa,Nairobi,train,SGR Train,Kenya Railways,45,23,2,12,200,5,true,Standard class. Madaraka Express. Departs 8am/3pm.,true
