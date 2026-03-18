@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import {
   LayoutDashboard, FileText, Plus, Users,
-  Settings, LogOut, Globe, Menu, X, Package, Database
+  Settings, LogOut, Globe, Menu, X, Database, Sun, Moon
 } from 'lucide-react'
 import Toast from './Toast'
 import { useToast } from '../hooks/useToast'
@@ -14,6 +14,14 @@ export default function Layout({ children }) {
   const location = useLocation()
   const { toasts, addToast, removeToast } = useToast()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [theme, setTheme] = useState(() => localStorage.getItem('sf_theme') || 'dark')
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('sf_theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
 
   const initials = user?.firstName?.[0] || user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() || 'A'
   const name = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.emailAddresses?.[0]?.emailAddress
@@ -73,6 +81,17 @@ export default function Layout({ children }) {
       </nav>
 
       <div className="sidebar-footer">
+        {/* Theme toggle */}
+        <div className="theme-toggle" style={{ marginBottom: 8 }}>
+          <span className="theme-toggle-label">
+            {theme === 'dark' ? <><Moon size={11} style={{ display: 'inline', marginRight: 4 }} />Dark Mode</> : <><Sun size={11} style={{ display: 'inline', marginRight: 4 }} />Light Mode</>}
+          </span>
+          <button
+            className={`theme-toggle-btn ${theme === 'light' ? 'light' : ''}`}
+            onClick={toggleTheme}
+            title="Toggle theme"
+          />
+        </div>
         <div className="agent-card">
           <div className="agent-avatar">{initials}</div>
           <div>
