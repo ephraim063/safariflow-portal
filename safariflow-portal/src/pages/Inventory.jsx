@@ -49,13 +49,54 @@ function ConfirmDelete({ onConfirm, onCancel }) {
   )
 }
 
-function CSVSection({ onUpload, templatePath, templateName, importing, result }) {
+const TEMPLATES = {
+  properties: `name,destination,country,category,star_rating,room_type,meal_plan,season_type,price_per_person_usd,child_price_per_person_usd,child_age_min,child_age_max,single_supplement_usd,min_nights,highlights,contact_email,contact_phone,is_active
+Angama Mara,Masai Mara,Kenya,luxury,5,Tented Suite,Full Board,high,1950,975,2,12,500,2,Infinity pool with Mara views,reservations@angama.com,+254 722 000 001,true
+Tortilis Camp,Amboseli,Kenya,luxury,5,Luxury Tent,Full Board,high,1650,825,2,12,400,2,Kilimanjaro views,reservations@tortilis.com,+254 722 000 002,true`,
+
+  transport: `from_location,to_location,transport_type,vehicle_type,operator_name,price_per_person_usd,child_price_per_person_usd,child_age_min,child_age_max,max_pax_per_vehicle,duration_hours,is_shared,notes,is_active
+Nairobi (Wilson),Masai Mara,fly,Cessna,SafariAir,450,225,2,12,4,1,false,Includes 15kg luggage,true
+Nairobi,Masai Mara,road,Land Cruiser 4x4,Ground Transfer,150,75,2,12,6,5,false,Departs 7am,true
+Mombasa,Nairobi,train,SGR Train,Kenya Railways,45,23,2,12,200,5,true,Madaraka Express,true`,
+
+  parkfees: `park_name,destination,country,visitor_category,fee_per_person_per_day_usd,child_fee_per_person_per_day_usd,child_age_min,child_age_max,notes
+Masai Mara National Reserve,Masai Mara,Kenya,non_resident,200,100,3,17,Children 3-17. Under 3 free.
+Masai Mara National Reserve,Masai Mara,Kenya,resident,80,40,3,17,EAC residents
+Masai Mara National Reserve,Masai Mara,Kenya,citizen,40,20,3,17,Kenyan citizens
+Amboseli National Park,Amboseli,Kenya,non_resident,90,45,3,17,KWS Premium Park
+Amboseli National Park,Amboseli,Kenya,resident,60,30,3,17,EAC residents
+Amboseli National Park,Amboseli,Kenya,citizen,30,15,3,17,Kenyan/EAC citizens
+Lake Nakuru National Park,Lake Nakuru,Kenya,non_resident,90,45,3,17,KWS Premium Park
+Lake Nakuru National Park,Lake Nakuru,Kenya,resident,60,30,3,17,EAC residents
+Lake Nakuru National Park,Lake Nakuru,Kenya,citizen,30,15,3,17,Kenyan/EAC citizens
+Tsavo East National Park,Tsavo East,Kenya,non_resident,80,40,3,17,KWS Wilderness Park
+Tsavo East National Park,Tsavo East,Kenya,resident,50,25,3,17,EAC residents
+Tsavo East National Park,Tsavo East,Kenya,citizen,25,13,3,17,Kenyan/EAC citizens
+Tsavo West National Park,Tsavo West,Kenya,non_resident,80,40,3,17,KWS Wilderness Park
+Nairobi National Park,Nairobi,Kenya,non_resident,80,40,3,17,KWS Urban Park
+Nairobi National Park,Nairobi,Kenya,resident,50,25,3,17,EAC residents
+Nairobi National Park,Nairobi,Kenya,citizen,25,13,3,17,Kenyan/EAC citizens
+Samburu National Reserve,Samburu,Kenya,non_resident,85,40,5,17,County managed
+Hell's Gate National Park,Hell's Gate,Kenya,non_resident,50,25,3,17,KWS Scenic Park
+Aberdare National Park,Aberdare,Kenya,non_resident,70,35,3,17,KWS Wilderness Park
+Meru National Park,Meru,Kenya,non_resident,70,35,3,17,KWS Wilderness Park`
+}
+
+function downloadTemplate(type, filename) {
+  const blob = new Blob([TEMPLATES[type]], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+
+function CSVSection({ onUpload, templateType, templateName, importing, result }) {
   const ref = useRef()
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <a href={templatePath} download={templateName} style={{ textDecoration: 'none' }}>
-        <button className="btn btn-ghost" style={{ fontSize: 12 }}><Download size={13} /> Download Template</button>
-      </a>
+      <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => downloadTemplate(templateType, templateName)}>
+        <Download size={13} /> Download Template
+      </button>
       <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => ref.current.click()} disabled={importing}>
         {importing ? <><span className="spinner" style={{ width: 12, height: 12 }} />Importing...</> : <><Upload size={13} /> Upload CSV</>}
       </button>
@@ -137,7 +178,7 @@ function PropertiesTab({ agentId }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <CSVSection onUpload={handleCSV} templatePath="/templates/properties_template.csv" templateName="properties_template.csv" importing={importing} result={importResult} />
+        <CSVSection onUpload={handleCSV} templateType="properties" templateName="properties_template.csv" importing={importing} result={importResult} />
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Property</button>
       </div>
 
@@ -239,7 +280,7 @@ function TransportTab({ agentId }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <CSVSection onUpload={handleCSV} templatePath="/templates/transport_template.csv" templateName="transport_template.csv" importing={importing} result={importResult} />
+        <CSVSection onUpload={handleCSV} templateType="transport" templateName="transport_template.csv" importing={importing} result={importResult} />
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Route</button>
       </div>
 
@@ -337,7 +378,7 @@ function ParkFeesTab({ agentId }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <CSVSection onUpload={handleCSV} templatePath="/templates/park_fees_template.csv" templateName="park_fees_template.csv" importing={importing} result={importResult} />
+          <CSVSection onUpload={handleCSV} templateType="parkfees" templateName="park_fees_template.csv" importing={importing} result={importResult} />
           <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: 'var(--gold-dim)', color: 'var(--gold)' }}>📋 Template includes KWS 2025/26 rates</span>
         </div>
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Fee</button>
