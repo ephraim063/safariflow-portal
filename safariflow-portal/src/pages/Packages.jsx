@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Search, Plus, Users, Clock, ChevronRight } from 'lucide-react'
 import PackageDetailModal from '../components/PackageDetailModal'
 
-// Direct Unsplash photo IDs - reliable, no API key needed
 const PKG_IMAGES = {
   'PKG-001': 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600&q=80',
   'PKG-002': 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=600&q=80',
@@ -138,42 +137,25 @@ function PackageCard({ pkg, onClick }) {
             fontSize: 48, background: 'linear-gradient(135deg, #F0EDE8, #E8E4DC)'
           }}>🌍</div>
         )}
-
-        {/* Subtle gradient overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(13,30,53,0.55) 0%, transparent 50%)'
-        }} />
-
-        {/* Category badge */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,30,53,0.55) 0%, transparent 50%)' }} />
         <div style={{
           position: 'absolute', top: 12, left: 12,
-          background: 'rgba(255,255,255,0.92)',
-          color: catStyle.color,
-          backdropFilter: 'blur(8px)',
-          padding: '4px 11px', borderRadius: 20,
+          background: 'rgba(255,255,255,0.92)', color: catStyle.color,
+          backdropFilter: 'blur(8px)', padding: '4px 11px', borderRadius: 20,
           fontSize: 10, fontWeight: 700, letterSpacing: 0.8,
-          border: `1px solid ${catStyle.color}30`,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          border: `1px solid ${catStyle.color}30`, boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         }}>
           {pkg.category}
         </div>
-
-        {/* Duration badge */}
         <div style={{
           position: 'absolute', top: 12, right: 12,
-          background: 'rgba(13,30,53,0.75)',
-          color: '#E8C98E',
-          backdropFilter: 'blur(8px)',
-          padding: '4px 10px', borderRadius: 20,
-          fontSize: 10, fontWeight: 600,
-          display: 'flex', alignItems: 'center', gap: 4,
+          background: 'rgba(13,30,53,0.75)', color: '#E8C98E',
+          backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: 20,
+          fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
           border: '1px solid rgba(200,169,110,0.25)',
         }}>
           <Clock size={10} /> {pkg.duration} nights
         </div>
-
-        {/* Location on image */}
         <div style={{
           position: 'absolute', bottom: 12, left: 12,
           color: 'white', fontSize: 12, fontWeight: 600,
@@ -184,12 +166,8 @@ function PackageCard({ pkg, onClick }) {
         </div>
       </div>
 
-      {/* Card Content — light background */}
-      <div style={{
-        padding: '18px 20px', flex: 1,
-        display: 'flex', flexDirection: 'column',
-        background: '#FFFFFF',
-      }}>
+      {/* Card Content */}
+      <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', background: '#FFFFFF' }}>
         <h3 style={{
           fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 700,
           color: '#0D1E35', marginBottom: 7, lineHeight: 1.3,
@@ -197,8 +175,9 @@ function PackageCard({ pkg, onClick }) {
           {pkg.name}
         </h3>
 
+        {/* ── Description — darkened from #777770 to #444440 ── */}
         <p style={{
-          fontSize: 12.5, color: '#777770', lineHeight: 1.65,
+          fontSize: 12.5, color: '#444440', lineHeight: 1.65,
           marginBottom: 16, flex: 1,
           display: '-webkit-box', WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -212,26 +191,29 @@ function PackageCard({ pkg, onClick }) {
           paddingTop: 14, borderTop: '1px solid #F0EDE8',
         }}>
           <div>
+            {/* ── "From · Per Person" — darkened from #AAAAAA to #666660 ── */}
             <div style={{
-              fontSize: 9.5, color: '#AAAAAA', marginBottom: 2,
-              letterSpacing: 1, fontWeight: 600, textTransform: 'uppercase',
+              fontSize: 10, color: '#666660', marginBottom: 3,
+              letterSpacing: 1, fontWeight: 700, textTransform: 'uppercase',
             }}>
               From · {pkg.price_type}
             </div>
+            {/* ── Price — kept gold but slightly deeper ── */}
             <div style={{
               fontFamily: 'var(--font-display)', fontSize: 22,
-              fontWeight: 700, color: '#C8A96E', lineHeight: 1,
+              fontWeight: 700, color: '#A8762E', lineHeight: 1,
             }}>
               {fmtPrice(pkg.base_price)}
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* ── Max travelers — darkened from #AAAAAA to #666660 ── */}
             <div style={{
-              fontSize: 11, color: '#AAAAAA',
+              fontSize: 11, color: '#666660', fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 3,
             }}>
-              <Users size={11} /> max {pkg.max_travelers}
+              <Users size={11} color="#666660" /> max {pkg.max_travelers}
             </div>
             <div style={{
               width: 34, height: 34, borderRadius: '50%',
@@ -288,7 +270,6 @@ export default function Packages() {
       </div>
 
       <div className="page-body">
-        {/* Search + Sort row */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
@@ -296,7 +277,7 @@ export default function Packages() {
             borderRadius: 10, padding: '8px 14px', flex: 1, minWidth: 220,
             boxShadow: '0 1px 4px rgba(13,30,53,0.06)',
           }}>
-            <Search size={14} color="#AAAAAA" />
+            <Search size={14} color="#888880" />
             <input
               placeholder="Search packages, destinations..."
               value={search}
@@ -325,14 +306,13 @@ export default function Packages() {
           </select>
         </div>
 
-        {/* Category filter pills */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 26, flexWrap: 'wrap' }}>
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => setCategory(cat)} style={{
               padding: '7px 18px', borderRadius: 20,
               border: `1px solid ${category === cat ? '#C8A96E' : '#E8E4DE'}`,
               background: category === cat ? '#C8A96E' : '#FFFFFF',
-              color: category === cat ? '#FFFFFF' : '#777770',
+              color: category === cat ? '#FFFFFF' : '#555550',
               fontSize: 12, fontWeight: category === cat ? 700 : 500,
               cursor: 'pointer', transition: 'all 0.2s ease',
               fontFamily: 'var(--font-body)',
