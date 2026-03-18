@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Search, Plus, Eye, Download, RefreshCw } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Search, Plus, Eye, Download, Edit2 } from 'lucide-react'
 import { supabaseFetch } from '../hooks/useSupabase'
 import { StatusBadge } from './Dashboard'
 import { useUser } from '@clerk/clerk-react'
@@ -9,6 +9,7 @@ const fmtFull = (n) => `$ ${Number(n || 0).toLocaleString()}`
 
 export default function Quotes() {
   const { user } = useUser()
+  const navigate = useNavigate()
   const [quotes, setQuotes] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -167,6 +168,16 @@ export default function Quotes() {
                     <td><StatusBadge status={quote.status} /></td>
                     <td onClick={e => e.stopPropagation()}>
                       <div style={{ display: 'flex', gap: 4 }}>
+                        {(quote.status === 'revision_requested' || quote.status === 'draft_revision') && (
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: '5px 10px', fontSize: 11 }}
+                            onClick={() => navigate(`/quotes/review/${quote.quote_number}`)}
+                            title="Review & Revise"
+                          >
+                            <Edit2 size={12} /> Review
+                          </button>
+                        )}
                         {quote.pdf_url && (
                           <button
                             className="btn btn-ghost"
