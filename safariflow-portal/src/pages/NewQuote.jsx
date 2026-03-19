@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
-import { Plus, Trash2, ArrowLeft, CheckCircle, Calendar, Send } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft, CheckCircle, Calendar, Send, Star } from 'lucide-react'
+import { COUNTRIES } from '../data/countries'
+import { supabaseFetch } from '../hooks/useSupabase'
 
 const WEBHOOK_URL = import.meta.env.VITE_MAKE_WEBHOOK_URL
 
@@ -21,6 +23,32 @@ export default function NewQuote() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState(null)
+  const [extras, setExtras] = useState([])
+  const [selectedExtras, setSelectedExtras] = useState([])
+  const [agentId, setAgentId] = useState(null)
+
+  useEffect(() => {
+    if (!user?.id) return
+    const load = async () => {
+      try {
+        const agents = await supabaseFetch('agents', { clerk_user_id: `eq.${user.id}`, select: 'id' })
+        if (!agents.length) return
+        const aid = agents[0].id
+        setAgentId(aid)
+        const ex = await supabaseFetch('optional_extras', { agent_id: `eq.${aid}`, is_active: 'eq.true', select: '*', order: 'category.asc,name.asc' })
+        setExtras(ex)
+      } catch (e) { console.error(e) }
+    }
+    load()
+  }, [user?.id])
+
+  const toggleExtra = (extra) => {
+    setSelectedExtras(prev =>
+      prev.find(e => e.id === extra.id)
+        ? prev.filter(e => e.id !== extra.id)
+        : [...prev, extra]
+    )
+  }
 
   const [form, setForm] = useState({
     client_name: '',
@@ -100,6 +128,7 @@ export default function NewQuote() {
         budget_usd: Number(form.budget_usd) || 0,
         budget_type: form.budget_type,
         special_requests: form.special_requests ? [form.special_requests] : [],
+        optional_extras: selectedExtras.map(e => ({ id: e.id, name: e.name, price_usd: e.price_per_person_usd_cents / 100, price_type: e.price_type })),
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -192,7 +221,10 @@ export default function NewQuote() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nationality</label>
-                  <input className="form-input" placeholder="British" value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)} />
+                  <select className="form-select" value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)}>
+                    <option value="">— Select nationality —</option>
+                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
               </div>
             </div>
@@ -287,6 +319,47 @@ export default function NewQuote() {
                 <input type="checkbox" id="flex" checked={form.flexible_dates} onChange={e => set('flexible_dates', e.target.checked)} style={{ cursor: 'pointer' }} />
                 <label htmlFor="flex" style={{ fontSize: 13, color: 'var(--text-mid)', cursor: 'pointer' }}>Dates are flexible</label>
               </div>
+            </div>
+
+            {/* Optional Extras */}
+            {extras.length > 0 && (
+              <div className="card" style={{ marginBottom: 20 }}>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8, paddingBottom: 14, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Star size={16} color="var(--gold)" /> Optional Extras
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 16 }}>Select any additional experiences or services for this client.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                  {extras.map(extra => {
+                    const selected = selectedExtras.find(e => e.id === extra.id)
+                    return (
+                      <div key={extra.id} onClick={() => toggleExtra(extra)} style={{
+                        padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+                        border: `1px solid ${selected ? 'var(--gold)' : 'var(--border)'}`,
+                        background: selected ? 'var(--gold-dim)' : 'var(--surface)',
+                        transition: 'all 0.2s',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: selected ? 'var(--gold)' : 'var(--text)' }}>{extra.name}</div>
+                          {selected && <span style={{ fontSize: 10, background: 'var(--gold)', color: 'white', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>✓</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4 }}>{extra.category} · {extra.duration_hours}h</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', fontFamily: 'var(--font-display)' }}>
+                          ${(extra.price_per_person_usd_cents / 100).toLocaleString()}
+                          <span style={{ fontSize: 10, fontWeight: 400, color: 'var(--text-dim)', fontFamily: 'var(--font-body)' }}> / {extra.price_type === 'per_person' ? 'person' : 'group'}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {selectedExtras.length > 0 && (
+                  <div style={{ marginTop: 12, padding: '8px 12px', background: 'var(--gold-dim)', borderRadius: 8, fontSize: 12, color: 'var(--gold)' }}>
+                    ✓ {selectedExtras.length} extra{selectedExtras.length > 1 ? 's' : ''} selected: {selectedExtras.map(e => e.name).join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ display: 'none' }}>{/* close trip details card */}
             </div>
           </div>
 
