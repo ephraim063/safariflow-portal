@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useUser } from '@clerk/clerk-react'
-import { Plus, Trash2, Edit2, Save, X, Building2, Plane, TreePine, Upload, Download, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, Edit2, Save, X, Building2, Plane, TreePine, Upload, Download, Star } from 'lucide-react'
 import { supabaseFetch, supabaseInsert, supabasePatch } from '../hooks/useSupabase'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -421,13 +421,254 @@ function ParkFeesTab({ agentId }) {
   )
 }
 
+// ─── Optional Extras Tab ─────────────────────────────────────────────────────
+const EXTRA_CATEGORIES = ['Activity', 'Air Activity', 'Water Activity', 'Game Drive', 'Walking Safari', 'Cultural', 'Wellness', 'Transfer', 'Other']
+const PRICE_TYPES = [
+  { value: 'per_person', label: 'Per Person' },
+  { value: 'per_group', label: 'Per Group/Vehicle' },
+  { value: 'per_flight', label: 'Per Flight' },
+]
+
+function ExtrasTab({ agentId }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editId, setEditId] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  const empty = {
+    name: '', category: 'Activity', description: '', destination: '',
+    price_per_person_usd_cents: '', child_price_per_person_usd_cents: '',
+    child_age_min: 2, child_age_max: 12, price_type: 'per_person',
+    duration_hours: 2, min_pax: 1, max_pax: 20, is_active: true, notes: ''
+  }
+  const [form, setForm] = useState(empty)
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const load = async () => {
+    try {
+      const data = await supabaseFetch('optional_extras', { agent_id: `eq.${agentId}`, select: '*', order: 'name.asc' })
+      setItems(data)
+    } catch (e) { console.error(e) } finally { setLoading(false) }
+  }
+  useEffect(() => { if (agentId) load() }, [agentId])
+
+  const toPayload = (f) => ({
+    ...f, agent_id: agentId,
+    price_per_person_usd_cents: Math.round(Number(f.price_per_person_usd_cents) * 100),
+    child_price_per_person_usd_cents: f.child_price_per_person_usd_cents ? Math.round(Number(f.child_price_per_person_usd_cents) * 100) : null,
+    child_age_min: Number(f.child_age_min) || 2,
+    child_age_max: Number(f.child_age_max) || 12,
+    duration_hours: Number(f.duration_hours) || 2,
+    min_pax: Number(f.min_pax) || 1,
+    max_pax: Number(f.max_pax) || 20,
+  })
+
+  const handleSave = async () => {
+    if (!form.name || !form.price_per_person_usd_cents) return alert('Please fill in name and price.')
+    setSaving(true)
+    try {
+      if (editId) await supabasePatch('optional_extras', { id: `eq.${editId}` }, toPayload(form))
+      else await supabaseInsert('optional_extras', toPayload(form))
+      setShowForm(false); setEditId(null); setForm(empty); await load()
+    } catch (e) { alert('Save failed: ' + e.message) } finally { setSaving(false) }
+  }
+
+  const handleEdit = (item) => {
+    setForm({
+      ...item,
+      price_per_person_usd_cents: item.price_per_person_usd_cents / 100,
+      child_price_per_person_usd_cents: item.child_price_per_person_usd_cents ? item.child_price_per_person_usd_cents / 100 : '',
+    })
+    setEditId(item.id); setShowForm(true)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+      await fetch(`${SUPABASE_URL}/rest/v1/optional_extras?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+      })
+      setConfirmDelete(null); await load()
+    } catch (e) { alert('Delete failed') }
+  }
+
+  const categoryColors = {
+    'Air Activity': '#4A90D9', 'Water Activity': '#32B496', 'Game Drive': '#C8A96E',
+    'Walking Safari': '#6AB07A', 'Cultural': '#E05C2A', 'Wellness': '#B07AB4',
+    'Activity': '#C8A96E', 'Transfer': '#888', 'Other': '#888',
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-mid)' }}>{items.length} optional extras</div>
+        <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}>
+          <Plus size={14} /> Add Extra
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="card" style={{ marginBottom: 20, border: '1px solid var(--gold)', background: 'rgba(200,169,110,0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h4 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>{editId ? 'Edit' : 'Add'} Optional Extra</h4>
+            <button className="btn btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setShowForm(false); setEditId(null) }}><X size={14} /></button>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Name *</label>
+              <input className="form-input" placeholder="Hot Air Balloon Safari" value={form.name} onChange={e => set('name', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Category</label>
+              <select className="form-select" value={form.category} onChange={e => set('category', e.target.value)}>
+                {EXTRA_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Destination</label>
+              <input className="form-input" placeholder="Masai Mara" value={form.destination} onChange={e => set('destination', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Duration (hours)</label>
+              <input className="form-input" type="number" placeholder="2" value={form.duration_hours} onChange={e => set('duration_hours', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <input className="form-input" placeholder="Sunrise balloon flight over the Masai Mara..." value={form.description} onChange={e => set('description', e.target.value)} />
+          </div>
+
+          <PricingBox>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Price Type</label>
+                <select className="form-select" value={form.price_type} onChange={e => set('price_type', e.target.value)}>
+                  {PRICE_TYPES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Price (USD) *</label>
+                <input className="form-input" type="number" placeholder="450" value={form.price_per_person_usd_cents} onChange={e => set('price_per_person_usd_cents', e.target.value)} />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Child Price (USD)</label>
+                <input className="form-input" type="number" placeholder="225 (blank = not available)" value={form.child_price_per_person_usd_cents} onChange={e => set('child_price_per_person_usd_cents', e.target.value)} />
+              </div>
+              <AgeRange minVal={form.child_age_min} maxVal={form.child_age_max} onMinChange={v => set('child_age_min', v)} onMaxChange={v => set('child_age_max', v)} />
+            </div>
+          </PricingBox>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Min Pax</label>
+              <input className="form-input" type="number" placeholder="1" value={form.min_pax} onChange={e => set('min_pax', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Max Pax</label>
+              <input className="form-input" type="number" placeholder="20" value={form.max_pax} onChange={e => set('max_pax', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Notes</label>
+            <input className="form-input" placeholder="Minimum age, weight limits, what's included..." value={form.notes} onChange={e => set('notes', e.target.value)} />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <input type="checkbox" id="ea" checked={form.is_active} onChange={e => set('is_active', e.target.checked)} />
+            <label htmlFor="ea" style={{ fontSize: 13, color: 'var(--text-mid)' }}>Active (available for selection in quotes)</label>
+          </div>
+
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} />Saving...</> : <><Save size={14} />Save Extra</>}
+          </button>
+        </div>
+      )}
+
+      <div className="table-container">
+        {loading ? <div className="empty-state"><div className="spinner" style={{ width: 24, height: 24, margin: '0 auto' }} /></div>
+        : items.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🎈</div>
+            <div className="empty-state-text">No optional extras yet — add activities, experiences and transfers your clients can add to their safari</div>
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Extra</th>
+                <th>Category</th>
+                <th>Destination</th>
+                <th>Price Type</th>
+                <th>Adult Price</th>
+                <th>Child Price</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(item => (
+                <tr key={item.id}>
+                  <td>
+                    <div style={{ fontWeight: 500 }}>{item.name}</div>
+                    {item.notes && <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{item.notes.slice(0, 40)}...</div>}
+                  </td>
+                  <td>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: `${categoryColors[item.category] || '#888'}22`, color: categoryColors[item.category] || '#888', fontWeight: 600 }}>
+                      {item.category}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: 13, color: 'var(--text-mid)' }}>{item.destination || '—'}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text-mid)' }}>{PRICE_TYPES.find(p => p.value === item.price_type)?.label || item.price_type}</td>
+                  <td style={{ fontFamily: 'var(--font-display)', color: 'var(--gold)', fontWeight: 600 }}>{fmtUSD(item.price_per_person_usd_cents)}</td>
+                  <td style={{ fontSize: 12, color: 'var(--text-mid)' }}>
+                    {item.child_price_per_person_usd_cents ? `${fmtUSD(item.child_price_per_person_usd_cents)} (${item.child_age_min}-${item.child_age_max}yrs)` : 'N/A'}
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-mid)' }}>{item.duration_hours}h</td>
+                  <td>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: item.is_active ? 'rgba(74,124,89,0.15)' : 'var(--border)', color: item.is_active ? 'var(--sage-light)' : 'var(--text-dim)', fontWeight: 600 }}>
+                      {item.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>
+                    {confirmDelete === item.id ? (
+                      <ConfirmDelete onConfirm={() => handleDelete(item.id)} onCancel={() => setConfirmDelete(null)} />
+                    ) : (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button className="btn btn-ghost" style={{ padding: '5px 8px' }} onClick={() => handleEdit(item)}><Edit2 size={13} /></button>
+                        <button className="btn btn-ghost" style={{ padding: '5px 8px', color: 'var(--ember)' }} onClick={() => setConfirmDelete(item.id)}><Trash2 size={13} /></button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Inventory() {
   const { user } = useUser()
   const [tab, setTab] = useState('properties')
   const [agentId, setAgentId] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [counts, setCounts] = useState({ properties: 0, transport: 0, parkfees: 0 })
+  const [counts, setCounts] = useState({ properties: 0, transport: 0, parkfees: 0, extras: 0 })
 
   useEffect(() => {
     if (!user?.id) return
@@ -436,12 +677,13 @@ export default function Inventory() {
         const agents = await supabaseFetch('agents', { clerk_user_id: `eq.${user.id}`, select: 'id' })
         if (!agents.length) return
         const aid = agents[0].id; setAgentId(aid)
-        const [a, t, p] = await Promise.all([
+        const [a, t, p, e] = await Promise.all([
           supabaseFetch('accommodations', { agent_id: `eq.${aid}`, select: 'id' }),
           supabaseFetch('transport_routes', { agent_id: `eq.${aid}`, select: 'id' }),
           supabaseFetch('park_fees', { agent_id: `eq.${aid}`, select: 'id' }),
+          supabaseFetch('optional_extras', { agent_id: `eq.${aid}`, select: 'id' }),
         ])
-        setCounts({ properties: a.length, transport: t.length, parkfees: p.length })
+        setCounts({ properties: a.length, transport: t.length, parkfees: p.length, extras: e.length })
       } catch (e) { console.error(e) } finally { setLoading(false) }
     }
     load()
@@ -453,17 +695,19 @@ export default function Inventory() {
     <div>
       <div className="page-header">
         <h1 className="page-title">My Inventory</h1>
-        <p className="page-subtitle">Manage your properties, transport and park fees — this data powers the AI quote engine. Upload CSV files for fast onboarding.</p>
+        <p className="page-subtitle">Manage your properties, transport, park fees and optional extras — this data powers the AI quote engine.</p>
       </div>
       <div className="page-body">
         <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
           <TabButton active={tab==='properties'} onClick={()=>setTab('properties')} icon={Building2} label="Properties" count={counts.properties} />
           <TabButton active={tab==='transport'} onClick={()=>setTab('transport')} icon={Plane} label="Transport" count={counts.transport} />
           <TabButton active={tab==='parkfees'} onClick={()=>setTab('parkfees')} icon={TreePine} label="Park Fees" count={counts.parkfees} />
+          <TabButton active={tab==='extras'} onClick={()=>setTab('extras')} icon={Star} label="Optional Extras" count={counts.extras} />
         </div>
         {tab==='properties' && <PropertiesTab agentId={agentId} />}
         {tab==='transport' && <TransportTab agentId={agentId} />}
         {tab==='parkfees' && <ParkFeesTab agentId={agentId} />}
+        {tab==='extras' && <ExtrasTab agentId={agentId} />}
       </div>
     </div>
   )
