@@ -172,9 +172,9 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
             <button className="btn btn-primary" onClick={onClose}>Close</button>
           </div>
         ) : (
-          <div style={{ padding: '24px 28px' }}>
+          <div style={{ padding: '16px 20px' }}>
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 24, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
               {[
                 { key: 'overview', label: 'Overview' },
                 { key: 'quote', label: '✈️ Quick Quote' },
@@ -193,33 +193,32 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
 
             {tab === 'overview' && (
               <div>
-                {/* Pricing — LARGER FONTS */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+                {/* Pricing */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
                   {[
                     { label: 'Low Season', price: pkg.low_price, color: 'var(--sage-light)' },
                     { label: 'Standard', price: pkg.base_price, color: 'var(--gold)' },
                     { label: 'Peak Season', price: pkg.peak_price, color: 'var(--ember)' },
                   ].map(({ label, price, color }) => (
-                    <div key={label} style={{ background: 'var(--surface)', borderRadius: 10, padding: '14px 16px', textAlign: 'center', border: '1px solid var(--border)' }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-mid)', marginBottom: 6, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>{label}</div>
-                      {/* ── Increased from fontSize 20 to fontSize 26 ── */}
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>
+                    <div key={label} style={{ background: 'var(--surface)', borderRadius: 10, padding: '10px 12px', textAlign: 'center', border: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--text-mid)', marginBottom: 4, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>{label}</div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 700, color, lineHeight: 1 }}>
                         {fmtPrice(price)}
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 4 }}>{pkg.price_type}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 3 }}>{pkg.price_type}</div>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 20, textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 12, textAlign: 'center' }}>
                   Peak months: {pkg.peak_months} · Max {pkg.max_travelers} travelers
                 </div>
 
-                <div className="gold-divider" />
+                <div className="gold-divider" style={{ margin: '12px 0' }} />
 
                 {/* Highlights */}
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: 10 }}>Highlights</div>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text-dim)', marginBottom: 8 }}>Highlights</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {pkg.highlights.split(',').map((h, i) => (
                       <span key={i} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, background: 'var(--gold-dim)', color: 'var(--gold)', fontWeight: 500 }}>
@@ -230,17 +229,17 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                 </div>
 
                 {/* Inclusions / Exclusions */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                  <div style={{ background: 'rgba(74,124,89,0.08)', borderRadius: 10, padding: '14px 16px', border: '1px solid rgba(74,124,89,0.2)' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--sage-light)', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>✓ Included</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                  <div style={{ background: 'rgba(74,124,89,0.08)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(74,124,89,0.2)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--sage-light)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>✓ Included</div>
                     {pkg.inclusions.split(',').map((inc, i) => (
-                      <div key={i} style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 4 }}>• {inc.trim()}</div>
+                      <div key={i} style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 3 }}>• {inc.trim()}</div>
                     ))}
                   </div>
-                  <div style={{ background: 'rgba(224,92,42,0.06)', borderRadius: 10, padding: '14px 16px', border: '1px solid rgba(224,92,42,0.15)' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ember)', marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>✕ Excluded</div>
+                  <div style={{ background: 'rgba(224,92,42,0.06)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(224,92,42,0.15)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ember)', marginBottom: 6, letterSpacing: 1, textTransform: 'uppercase' }}>✕ Excluded</div>
                     {pkg.exclusions.split(',').map((exc, i) => (
-                      <div key={i} style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 4 }}>• {exc.trim()}</div>
+                      <div key={i} style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 3 }}>• {exc.trim()}</div>
                     ))}
                   </div>
                 </div>
@@ -254,14 +253,14 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
             {tab === 'quote' && (
               <div>
                 {error && (
-                  <div style={{ background: 'rgba(224,92,42,0.1)', border: '1px solid rgba(224,92,42,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: 'var(--ember)' }}>
+                  <div style={{ background: 'rgba(224,92,42,0.1)', border: '1px solid rgba(224,92,42,0.3)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 13, color: 'var(--ember)' }}>
                     {error}
                   </div>
                 )}
 
                 {/* Client details */}
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>Client Information</div>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Client Information</div>
                   <div className="form-row">
                     <div className="form-group">
                       <label className="form-label">Full Name *</label>
@@ -287,9 +286,9 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                   </div>
                 </div>
 
-                {/* Travel dates — CALENDAR PICKER */}
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>Travel Details</div>
+                {/* Travel dates */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Travel Details</div>
                   <div className="form-row">
                     <div className="form-group">
                       <label className="form-label"><Calendar size={11} style={{ display: 'inline', marginRight: 4 }} />Start Date *</label>
@@ -333,8 +332,8 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
 
                 {/* Optional Extras */}
                 {extras.length > 0 && (
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Star size={12} color="var(--gold)" /> Optional Extras
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
@@ -364,13 +363,13 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                 )}
 
                 {/* Special requests */}
-                <div className="form-group" style={{ marginBottom: 20 }}>
+                <div className="form-group" style={{ marginBottom: 14 }}>
                   <label className="form-label">Special Requests</label>
-                  <textarea className="form-textarea" style={{ minHeight: 60 }} placeholder="Honeymoon, dietary requirements..." value={form.special_requests} onChange={e => set('special_requests', e.target.value)} />
+                  <textarea className="form-textarea" style={{ minHeight: 50 }} placeholder="Honeymoon, dietary requirements..." value={form.special_requests} onChange={e => set('special_requests', e.target.value)} />
                 </div>
 
                 {/* Price summary */}
-                <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '16px 18px', marginBottom: 20, border: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '12px 14px', marginBottom: 14, border: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>Price Summary</div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
                     <span style={{ color: 'var(--text-mid)' }}>{pkg.name} × {form.pax_adults} adults</span>
