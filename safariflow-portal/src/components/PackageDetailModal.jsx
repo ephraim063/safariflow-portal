@@ -144,7 +144,7 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--card)', borderRadius: 16, width: '100%', maxWidth: 700, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
+        style={{ background: 'var(--card)', borderRadius: 16, width: '100%', maxWidth: 700, maxHeight: '92vh', overflowY: 'auto', overflowX: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Image header */}
@@ -261,25 +261,30 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                 {/* Client details */}
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Client Information</div>
-                  <div className="form-row">
-                    <div className="form-group">
+                  <div className="form-row" style={{ gap: 10, marginBottom: 10 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Full Name *</label>
                       <input className="form-input" placeholder="John & Jane Smith" value={form.client_name} onChange={e => set('client_name', e.target.value)} />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Email *</label>
                       <input className="form-input" type="email" placeholder="client@email.com" value={form.client_email} onChange={e => set('client_email', e.target.value)} />
                     </div>
                   </div>
-                  <div className="form-row">
-                    <div className="form-group">
+                  <div className="form-row" style={{ gap: 10, marginBottom: 0 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Phone</label>
                       <input className="form-input" placeholder="+44 7700 000000" value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Nationality</label>
-                      <select className="form-select" value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)}>
-                        <option value="">— Select nationality —</option>
+                      <select
+                        className="form-select"
+                        value={form.client_nationality}
+                        onChange={e => set('client_nationality', e.target.value)}
+                        style={{ maxWidth: '100%', overflow: 'hidden' }}
+                      >
+                        <option value="">— Select —</option>
                         {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
