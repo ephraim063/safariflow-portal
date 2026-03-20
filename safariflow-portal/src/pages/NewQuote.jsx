@@ -217,7 +217,15 @@ export default function NewQuote() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Phone Number</label>
-                  <input className="form-input" placeholder="+44 7700 000000" value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
+                  <input
+                    className="form-input"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9+\s\-()]+"
+                    placeholder="+44 7700 000000"
+                    value={form.client_phone}
+                    onChange={e => set('client_phone', e.target.value.replace(/[^0-9+\s\-()]/g, ''))}
+                  />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nationality</label>
