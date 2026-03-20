@@ -274,7 +274,15 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                   <div className="form-row" style={{ gap: 10, marginBottom: 0 }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Phone</label>
-                      <input className="form-input" placeholder="+44 7700 000000" value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
+                      <input
+                        className="form-input"
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9+\s\-()]+"
+                        placeholder="+44 7700 000000"
+                        value={form.client_phone}
+                        onChange={e => set('client_phone', e.target.value.replace(/[^0-9+\s\-()]/g, ''))}
+                      />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Nationality</label>
@@ -282,7 +290,8 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                         className="form-select"
                         value={form.client_nationality}
                         onChange={e => set('client_nationality', e.target.value)}
-                        style={{ maxWidth: '100%', overflow: 'hidden' }}
+                        size={1}
+                        style={{ maxWidth: '100%', maxHeight: 200 }}
                       >
                         <option value="">— Select —</option>
                         {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -294,8 +303,8 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                 {/* Travel dates */}
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Travel Details</div>
-                  <div className="form-row">
-                    <div className="form-group">
+                  <div className="form-row" style={{ gap: 10, marginBottom: 8 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label"><Calendar size={11} style={{ display: 'inline', marginRight: 4 }} />Start Date *</label>
                       <input
                         type="date"
@@ -306,7 +315,7 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                         style={{ cursor: 'pointer' }}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">End Date (auto)</label>
                       <input
                         type="date"
@@ -318,17 +327,17 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                     </div>
                   </div>
                   {form.start_date && (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--gold-dim)', border: '1px solid rgba(200,169,110,0.25)', borderRadius: 20, padding: '4px 14px', marginBottom: 8 }}>
-                      <Calendar size={12} color="var(--gold)" />
-                      <span style={{ fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>{pkg.duration} nights · {form.start_date} → {endDate}</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--gold-dim)', border: '1px solid rgba(200,169,110,0.25)', borderRadius: 20, padding: '3px 12px', marginBottom: 8 }}>
+                      <Calendar size={11} color="var(--gold)" />
+                      <span style={{ fontSize: 11, color: 'var(--gold)', fontWeight: 600 }}>{pkg.duration} nights · {form.start_date} → {endDate}</span>
                     </div>
                   )}
-                  <div className="form-row" style={{ marginTop: 8 }}>
-                    <div className="form-group">
+                  <div className="form-row" style={{ gap: 10, marginBottom: 0 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Adults</label>
                       <input className="form-input" type="number" min="1" max={pkg.max_travelers} value={form.pax_adults} onChange={e => set('pax_adults', e.target.value)} />
                     </div>
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Children</label>
                       <input className="form-input" type="number" min="0" value={form.pax_children} onChange={e => set('pax_children', e.target.value)} />
                     </div>
