@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Calendar, Users, Clock, CheckCircle, Send, Star } from 'lucide-react'
 import { useUser } from '@clerk/clerk-react'
 import { supabaseFetch } from '../hooks/useSupabase'
@@ -6,6 +6,66 @@ import { COUNTRIES } from '../data/countries'
 
 const WEBHOOK_URL = import.meta.env.VITE_MAKE_WEBHOOK_URL
 const fmtPrice = (n) => `$ ${Number(n).toLocaleString()}`
+
+// ─── Searchable nationality picker — always opens downward ────────────────────
+function NationalityPicker({ value, onChange }) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const ref = useRef()
+
+  const filtered = COUNTRIES.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 50)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <input
+        className="form-input"
+        placeholder="Search nationality..."
+        value={open ? search : value}
+        onFocus={() => { setOpen(true); setSearch('') }}
+        onChange={e => { setSearch(e.target.value); setOpen(true) }}
+        style={{ cursor: 'pointer' }}
+        readOnly={!open}
+      />
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999,
+          background: 'var(--card)', border: '1px solid var(--gold)',
+          borderRadius: 8, maxHeight: 180, overflowY: 'auto',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)', marginTop: 2,
+        }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text-dim)' }}>No results</div>
+          ) : filtered.map(c => (
+            <div
+              key={c}
+              onClick={() => { onChange(c); setOpen(false); setSearch('') }}
+              style={{
+                padding: '9px 14px', fontSize: 13, cursor: 'pointer',
+                color: c === value ? 'var(--gold)' : 'var(--text)',
+                background: c === value ? 'var(--gold-dim)' : 'transparent',
+                fontWeight: c === value ? 600 : 400,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--gold-dim)'}
+              onMouseLeave={e => e.currentTarget.style.background = c === value ? 'var(--gold-dim)' : 'transparent'}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
   const { user } = useUser()
@@ -286,16 +346,10 @@ export default function PackageDetailModal({ pkg, pkgImage, onClose }) {
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label">Nationality</label>
-                      <select
-                        className="form-select"
+                      <NationalityPicker
                         value={form.client_nationality}
-                        onChange={e => set('client_nationality', e.target.value)}
-                        size={1}
-                        style={{ maxWidth: '100%', maxHeight: 200 }}
-                      >
-                        <option value="">— Select —</option>
-                        {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                        onChange={v => set('client_nationality', v)}
+                      />
                     </div>
                   </div>
                 </div>
