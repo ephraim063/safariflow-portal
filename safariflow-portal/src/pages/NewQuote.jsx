@@ -1,9 +1,69 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { Plus, Trash2, ArrowLeft, CheckCircle, Calendar, Send, Star } from 'lucide-react'
 import { COUNTRIES } from '../data/countries'
 import { supabaseFetch } from '../hooks/useSupabase'
+
+// ─── Searchable nationality picker ───────────────────────────────────────────
+function NationalityPicker({ value, onChange }) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const ref = useRef()
+
+  const filtered = COUNTRIES.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 50)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <input
+        className="form-input"
+        placeholder="Search nationality..."
+        value={open ? search : value}
+        onFocus={() => { setOpen(true); setSearch('') }}
+        onChange={e => { setSearch(e.target.value); setOpen(true) }}
+        readOnly={!open}
+        style={{ cursor: 'pointer' }}
+      />
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999,
+          background: 'var(--card)', border: '1px solid var(--gold)',
+          borderRadius: 8, maxHeight: 180, overflowY: 'auto',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)', marginTop: 2,
+        }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text-dim)' }}>No results</div>
+          ) : filtered.map(c => (
+            <div
+              key={c}
+              onClick={() => { onChange(c); setOpen(false); setSearch('') }}
+              style={{
+                padding: '9px 14px', fontSize: 13, cursor: 'pointer',
+                color: c === value ? 'var(--gold)' : 'var(--text)',
+                background: c === value ? 'var(--gold-dim)' : 'transparent',
+                fontWeight: c === value ? 600 : 400,
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--gold-dim)'}
+              onMouseLeave={e => e.currentTarget.style.background = c === value ? 'var(--gold-dim)' : 'transparent'}
+            >
+              {c}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const WEBHOOK_URL = import.meta.env.VITE_MAKE_WEBHOOK_URL
 
@@ -229,10 +289,10 @@ export default function NewQuote() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nationality</label>
-                  <select className="form-select" value={form.client_nationality} onChange={e => set('client_nationality', e.target.value)}>
-                    <option value="">— Select nationality —</option>
-                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <NationalityPicker
+                    value={form.client_nationality}
+                    onChange={v => set('client_nationality', v)}
+                  />
                 </div>
               </div>
             </div>
