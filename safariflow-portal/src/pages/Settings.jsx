@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/clerk-react'
-import { Save, CheckCircle, Palette, TrendingUp, FileX } from 'lucide-react'
+import { Save, CheckCircle, Palette, TrendingUp, FileX, FilePen } from 'lucide-react'
 import { supabaseFetch, supabasePatch } from '../hooks/useSupabase'
 
 export default function Settings() {
@@ -33,6 +33,11 @@ export default function Settings() {
 • Cancellations made 30–59 days before departure: 50% of total safari cost forfeited.
 • Cancellations made 14–29 days before departure: 75% of total safari cost forfeited.
 • Cancellations made less than 14 days before departure: 100% of total safari cost forfeited. No refund.`,
+    amendment_terms: `• Amendments are permitted up to 24 hours before the trip start date.
+• No amendments will be accepted once travel has commenced.
+• Date changes are subject to availability and may incur supplier amendment fees.
+• An administration fee of $50 applies per amendment request.
+• A maximum of 2 amendments are permitted per confirmed booking.`,
   })
 
   const set = (key, val) => setSettings(s => ({ ...s, [key]: val }))
@@ -64,6 +69,7 @@ export default function Settings() {
             markup_park_fees_pct: a.markup_park_fees_pct || 0,
             markup_activities_pct: a.markup_activities_pct || 25,
             cancellation_terms: a.cancellation_terms || s.cancellation_terms,
+            amendment_terms: a.amendment_terms || s.amendment_terms,
           }))
         } else {
           setSettings(s => ({
@@ -99,6 +105,7 @@ export default function Settings() {
         markup_park_fees_pct: Number(settings.markup_park_fees_pct),
         markup_activities_pct: Number(settings.markup_activities_pct),
         cancellation_terms: settings.cancellation_terms,
+        amendment_terms: settings.amendment_terms,
       })
       setSaved(true); setTimeout(() => setSaved(false), 3000)
     } catch (e) { setError('Failed to save. Please try again.') }
@@ -251,7 +258,7 @@ export default function Settings() {
         </div>
 
         {/* Cancellation Terms */}
-        <div className="card" style={{ marginBottom: 28 }}>
+        <div className="card" style={{ marginBottom: 20 }}>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8, paddingBottom: 14, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <FileX size={18} color="var(--gold)" /> Cancellation Terms
           </h3>
@@ -268,6 +275,31 @@ export default function Settings() {
             />
             <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
               Use • at the start of each line for bullet points on the PDF.
+            </div>
+          </div>
+        </div>
+
+        {/* Amendment Terms */}
+        <div className="card" style={{ marginBottom: 28 }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8, paddingBottom: 14, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FilePen size={18} color="var(--gold)" /> Amendment Terms
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 16 }}>
+            These terms appear on invoices and booking confirmations after a deposit has been paid. They outline the conditions under which clients may request changes to a confirmed booking.
+          </p>
+          <div style={{ background: 'rgba(196,146,42,0.08)', border: '1px solid rgba(196,146,42,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: 'var(--text-mid)' }}>
+            ⚠ Amendments are not permitted once travel has commenced. This is enforced automatically by SafariFlow.
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <textarea
+              className="form-textarea"
+              value={settings.amendment_terms}
+              onChange={e => set('amendment_terms', e.target.value)}
+              style={{ minHeight: 140, fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.7 }}
+              placeholder="• Amendments are permitted up to 24 hours before the trip start date..."
+            />
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
+              Use • at the start of each line for bullet points on the invoice.
             </div>
           </div>
         </div>
