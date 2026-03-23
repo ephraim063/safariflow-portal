@@ -304,6 +304,58 @@ export default function Settings() {
           </div>
         </div>
 
+        {/* Integrations */}
+        <div className="card" style={{ marginBottom: 28 }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8, paddingBottom: 14, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            🔗 Integrations
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 20 }}>
+            Connect SafariFlow to your external platforms to automatically generate quotes from incoming enquiries.
+          </p>
+
+          {/* SafariBookings connector */}
+          <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <div style={{ fontSize: 28 }}>🦁</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>SafariBookings Email Connector</div>
+                <div style={{ fontSize: 12, color: 'var(--text-mid)' }}>Auto-generate AI quotes from SafariBookings enquiries</div>
+              </div>
+            </div>
+            <div style={{ background: 'var(--card)', borderRadius: 8, padding: '12px 14px', marginBottom: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                How it works:
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-mid)', lineHeight: 1.7 }}>
+                1. Register this email address with SafariBookings as your notification email<br />
+                2. Every new enquiry from SafariBookings triggers an automatic AI quote<br />
+                3. You receive the quote for approval within minutes — no manual work
+              </div>
+            </div>
+            <div style={{ background: 'var(--gold-dim)', borderRadius: 8, padding: '10px 14px', border: '1px solid rgba(196,146,42,0.3)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gold)', marginBottom: 4 }}>Your SafariBookings Notification Email:</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <code style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'monospace', flex: 1 }}>
+                  {agentId ? `${agentId.split('-')[0]}@inbound.safariflow.com` : 'Loading...'}
+                </code>
+                <button
+                  className="btn btn-ghost"
+                  style={{ fontSize: 11, padding: '4px 10px' }}
+                  onClick={() => {
+                    const email = `${agentId?.split('-')[0]}@inbound.safariflow.com`
+                    navigator.clipboard.writeText(email)
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
+                ⚙ Setup coming soon — this feature is being activated. Contact support to enable early access.
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button className="btn btn-primary" style={{ padding: '11px 24px' }} onClick={handleSave} disabled={saving}>
           {saving ? <><span className="spinner" style={{ width: 14, height: 14, borderTopColor: 'var(--night)' }} />Saving...</> : <><Save size={15} />Save Settings</>}
         </button>

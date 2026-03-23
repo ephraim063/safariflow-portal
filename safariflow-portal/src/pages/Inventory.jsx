@@ -82,26 +82,77 @@ Aberdare National Park,Aberdare,Kenya,non_resident,70,35,3,17,KWS Wilderness Par
 Meru National Park,Meru,Kenya,non_resident,70,35,3,17,KWS Wilderness Park`
 }
 
-function downloadTemplate(type, filename) {
-  const blob = new Blob([TEMPLATES[type]], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url; a.download = filename; a.click()
-  URL.revokeObjectURL(url)
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://web-production-4788f.up.railway.app'
+
+function downloadExcelTemplate(templateType) {
+  window.open(`${API_BASE}/download-template/${templateType}`, '_blank')
 }
 
-function CSVSection({ onUpload, templateType, templateName, importing, result }) {
+async function uploadExcel(file, inventoryType, agentId) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('agent_id', agentId)
+  const res = await fetch(`${API_BASE}/upload-inventory/${inventoryType}`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.error || 'Upload failed')
+  }
+  return res.json()
+}
+
+function ExcelSection({ inventoryType, agentId, onImportComplete, importing, setImporting, result, setResult }) {
   const ref = useRef()
+
+  const handleUpload = async (file) => {
+    setImporting(true)
+    setResult(null)
+    try {
+      const data = await uploadExcel(file, inventoryType, agentId)
+      setResult({ message: `✓ ${data.rows_inserted} rows imported successfully` })
+      onImportComplete()
+    } catch (e) {
+      setResult({ error: true, message: `✕ ${e.message}` })
+    } finally {
+      setImporting(false)
+    }
+  }
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => downloadTemplate(templateType, templateName)}>
+      <button
+        className="btn btn-ghost"
+        style={{ fontSize: 12 }}
+        onClick={() => downloadExcelTemplate(inventoryType)}
+        title="Download pre-formatted Excel template"
+      >
         <Download size={13} /> Download Template
       </button>
-      <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => ref.current.click()} disabled={importing}>
-        {importing ? <><span className="spinner" style={{ width: 12, height: 12 }} />Importing...</> : <><Upload size={13} /> Upload CSV</>}
+      <button
+        className="btn btn-ghost"
+        style={{ fontSize: 12 }}
+        onClick={() => ref.current.click()}
+        disabled={importing}
+        title="Upload filled Excel template"
+      >
+        {importing
+          ? <><span className="spinner" style={{ width: 12, height: 12 }} />Importing...</>
+          : <><Upload size={13} /> Upload Excel</>}
       </button>
-      <input ref={ref} type="file" accept=".csv" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) onUpload(e.target.files[0]); e.target.value = '' }} />
-      {result && <span style={{ fontSize: 12, color: result.error ? 'var(--ember)' : 'var(--sage-light)' }}>{result.error ? '✕ ' : '✓ '}{result.message}</span>}
+      <input
+        ref={ref}
+        type="file"
+        accept=".xlsx,.xls"
+        style={{ display: 'none' }}
+        onChange={e => { if (e.target.files[0]) handleUpload(e.target.files[0]); e.target.value = '' }}
+      />
+      {result && (
+        <span style={{ fontSize: 12, color: result.error ? 'var(--ember)' : 'var(--sage-light)' }}>
+          {result.message}
+        </span>
+      )}
     </div>
   )
 }
@@ -178,7 +229,15 @@ function PropertiesTab({ agentId }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <CSVSection onUpload={handleCSV} templateType="properties" templateName="properties_template.csv" importing={importing} result={importResult} />
+        <ExcelSection
+          inventoryType="accommodations"
+          agentId={agentId}
+          onImportComplete={load}
+          importing={importing}
+          setImporting={setImporting}
+          result={importResult}
+          setResult={setImportResult}
+        />
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Property</button>
       </div>
 
@@ -280,7 +339,15 @@ function TransportTab({ agentId }) {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <CSVSection onUpload={handleCSV} templateType="transport" templateName="transport_template.csv" importing={importing} result={importResult} />
+        <ExcelSection
+          inventoryType="transport"
+          agentId={agentId}
+          onImportComplete={load}
+          importing={importing}
+          setImporting={setImporting}
+          result={importResult}
+          setResult={setImportResult}
+        />
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Route</button>
       </div>
 
@@ -378,7 +445,15 @@ function ParkFeesTab({ agentId }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <CSVSection onUpload={handleCSV} templateType="parkfees" templateName="park_fees_template.csv" importing={importing} result={importResult} />
+          <ExcelSection
+            inventoryType="park_fees"
+            agentId={agentId}
+            onImportComplete={load}
+            importing={importing}
+            setImporting={setImporting}
+            result={importResult}
+            setResult={setImportResult}
+          />
           <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 10, background: 'var(--gold-dim)', color: 'var(--gold)' }}>📋 Template includes KWS 2025/26 rates</span>
         </div>
         <button className="btn btn-primary" onClick={() => { setForm(empty); setEditId(null); setShowForm(true) }}><Plus size={14} /> Add Fee</button>
