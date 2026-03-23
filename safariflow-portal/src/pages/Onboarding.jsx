@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useUser } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, ArrowRight, ArrowLeft, Download } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Download } from 'lucide-react'
 import { supabasePatch } from '../hooks/useSupabase'
+import { COUNTRIES } from '../data/countries'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://web-production-4788f.up.railway.app'
 
@@ -14,15 +15,75 @@ const STEPS = [
   { id: 5, title: 'Last Step!',     icon: '🦁' },
 ]
 
-const WORKFLOW = [
-  { icon: '📋', label: 'Add Inventory',      color: '#2E4A7A' },
-  { icon: '✨', label: 'AI Quote Generated', color: '#3A6B4A' },
-  { icon: '📧', label: 'Send to Client',     color: '#C4922A' },
-  { icon: '✅', label: 'Client Accepts',     color: '#3A6B4A' },
-  { icon: '🧾', label: 'Invoice Generated',  color: '#2E4A7A' },
-  { icon: '💳', label: 'Payment Confirmed',  color: '#C4922A' },
-  { icon: '🎫', label: 'Vouchers Generated', color: '#3A6B4A' },
-]
+// ── Phone validation ──────────────────────────────────────────────────────────
+function validatePhone(phone) {
+  const clean = phone.replace(/[\s\-()]/g, '')
+  if (!clean) return null
+  if (!clean.startsWith('+')) return 'Must start with + and country code e.g. +254'
+  if (!/^\+\d{9,14}$/.test(clean)) return 'Must be 10–15 digits including country code'
+  return 'valid'
+}
+
+// ── Country searchable picker ─────────────────────────────────────────────────
+function CountryPicker({ value, onChange }) {
+  const [search, setSearch] = useState('')
+  const [open, setOpen] = useState(false)
+  const ref = useRef()
+
+  const filtered = COUNTRIES.filter(c =>
+    c.toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 50)
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <input
+        className="form-input"
+        placeholder="Search country..."
+        value={open ? search : value}
+        onFocus={() => { setOpen(true); setSearch('') }}
+        onChange={e => { setSearch(e.target.value); setOpen(true) }}
+        readOnly={!open}
+        style={{ cursor: 'pointer' }}
+      />
+      {open && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 999,
+          background: 'var(--card)', border: '1px solid var(--gold)',
+          borderRadius: 8, maxHeight: 160, overflowY: 'auto',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)', marginTop: 2,
+        }}>
+          {filtered.length === 0
+            ? <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--text-dim)' }}>No results</div>
+            : filtered.map(c => (
+              <div
+                key={c}
+                onClick={() => { onChange(c); setOpen(false); setSearch('') }}
+                style={{
+                  padding: '8px 14px', fontSize: 13, cursor: 'pointer',
+                  color: c === value ? 'var(--gold)' : 'var(--text)',
+                  background: c === value ? 'var(--gold-dim)' : 'transparent',
+                  fontWeight: c === value ? 600 : 400,
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--gold-dim)'}
+                onMouseLeave={e => e.currentTarget.style.background = c === value ? 'var(--gold-dim)' : 'transparent'}
+              >
+                {c}
+              </div>
+            ))
+          }
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Onboarding({ agentId }) {
   const { user } = useUser()
@@ -30,6 +91,7 @@ export default function Onboarding({ agentId }) {
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [phoneError, setPhoneError] = useState(null)
 
   const [form, setForm] = useState({
     agency_name: '',
@@ -56,6 +118,13 @@ export default function Onboarding({ agentId }) {
   })
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
+
+  const handlePhoneChange = (val) => {
+    const cleaned = val.replace(/[^0-9+\s\-()]/g, '')
+    set('phone', cleaned)
+    const result = validatePhone(cleaned)
+    setPhoneError(result === 'valid' ? null : result)
+  }
 
   const saveAndGo = async (destination) => {
     setSaving(true)
@@ -153,12 +222,28 @@ export default function Onboarding({ agentId }) {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Phone Number</label>
-                  <input className="form-input" type="tel" placeholder="+254 722 000 000" value={form.phone} onChange={e => set('phone', e.target.value.replace(/[^0-9+\s\-()]/g, ''))} />
+                  <label className="form-label">Phone Number *</label>
+                  <input
+                    className="form-input"
+                    type="tel"
+                    placeholder="+254 722 000 000"
+                    value={form.phone}
+                    onChange={e => handlePhoneChange(e.target.value)}
+                    style={{ borderColor: phoneError ? 'var(--ember)' : form.phone && !phoneError ? 'var(--sage)' : undefined }}
+                  />
+                  {phoneError && (
+                    <div style={{ fontSize: 11, color: 'var(--ember)', marginTop: 4 }}>⚠ {phoneError}</div>
+                  )}
+                  {form.phone && !phoneError && (
+                    <div style={{ fontSize: 11, color: 'var(--sage-light)', marginTop: 4 }}>✓ Valid format</div>
+                  )}
+                  {!form.phone && (
+                    <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 4 }}>Include country code e.g. +254 for Kenya, +255 for Tanzania</div>
+                  )}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Country</label>
-                  <input className="form-input" placeholder="Kenya" value={form.country} onChange={e => set('country', e.target.value)} />
+                  <label className="form-label">Country *</label>
+                  <CountryPicker value={form.country} onChange={v => set('country', v)} />
                 </div>
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
@@ -253,99 +338,81 @@ export default function Onboarding({ agentId }) {
           {/* Step 5 — Last Step */}
           {step === 5 && (
             <div>
-              <p style={{ fontSize: 13, color: 'var(--text-mid)', marginBottom: 14, lineHeight: 1.6 }}>
-                You're almost ready! Upload your safari inventory — your{' '}
-                <strong style={{ color: 'var(--text)' }}>accommodations</strong>,{' '}
-                <strong style={{ color: 'var(--text)' }}>transport routes</strong> and{' '}
-                <strong style={{ color: 'var(--text)' }}>park fees</strong>.
-                Once uploaded, SafariFlow AI will use your data to generate complete itineraries and quotes in minutes.
+              {/* Description */}
+              <p style={{ fontSize: 14, color: 'var(--text)', marginBottom: 6, lineHeight: 1.7, fontWeight: 500 }}>
+                You're almost ready! Before generating quotes, upload your:
               </p>
-
-              {/* Workflow diagram */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
-                  Your complete SafariFlow workflow:
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
-                  {WORKFLOW.map((w, i) => (
-                    <div key={w.label} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <div style={{
-                        background: `${w.color}12`,
-                        border: `1px solid ${w.color}35`,
-                        borderRadius: 6, padding: '4px 8px',
-                        display: 'flex', alignItems: 'center', gap: 4,
-                      }}>
-                        <span style={{ fontSize: 12 }}>{w.icon}</span>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: w.color, whiteSpace: 'nowrap' }}>{w.label}</span>
-                      </div>
-                      {i < WORKFLOW.length - 1 && (
-                        <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 700 }}>→</span>
-                      )}
+              <div style={{ marginBottom: 20 }}>
+                {[
+                  { icon: '🏨', label: 'Accommodation Rates', desc: 'Your lodges, camps and hotels with nightly prices' },
+                  { icon: '✈️', label: 'Transport Rates',      desc: 'Road vehicles, flights and train routes with pricing' },
+                  { icon: '🌿', label: 'Park Fees',            desc: 'KWS, TANAPA and other park entry fees' },
+                ].map(({ icon, label, desc }) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 22, flexShrink: 0 }}>{icon}</span>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-mid)' }}>{desc}</div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
 
               {/* Download templates */}
-              <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border)', marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
-                  Step 1 — Download & fill your inventory templates:
+              <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '16px 18px', border: '1px solid var(--border)', marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+                  Step 1 — Download each template
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-mid)', marginBottom: 14, lineHeight: 1.6 }}>
+                  Each Excel file has column headers and an example row to guide you. Fill in your rates and save the file.
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   {[
-                    { type: 'accommodations', icon: '🏨', label: 'Accommodations' },
-                    { type: 'transport',       icon: '✈️', label: 'Transport' },
+                    { type: 'accommodations', icon: '🏨', label: 'Accommodation Rates' },
+                    { type: 'transport',       icon: '✈️', label: 'Transport Rates' },
                     { type: 'park_fees',       icon: '🌿', label: 'Park Fees' },
                   ].map(({ type, icon, label }) => (
                     <button
                       key={type}
                       onClick={() => window.open(`${API_BASE}/download-template/${type}`, '_blank')}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: 6,
-                        padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
-                        border: '1px solid var(--gold)', background: 'var(--gold-dim)',
-                        fontFamily: 'var(--font-body)', fontSize: 11, fontWeight: 600,
-                        color: 'var(--gold)', transition: 'all 0.2s',
+                        padding: '12px 8px', borderRadius: 10, cursor: 'pointer',
+                        border: '2px solid var(--gold)', background: 'var(--gold-dim)',
+                        fontFamily: 'var(--font-body)', textAlign: 'center',
+                        transition: 'all 0.2s',
                       }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                     >
-                      <span>{icon}</span>
-                      <Download size={11} />
-                      <span>{label}</span>
+                      <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold)', marginBottom: 4 }}>{label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--gold)', opacity: 0.8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <Download size={11} /> Download Excel
+                      </div>
                     </button>
                   ))}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 8 }}>
-                  Each template has column headers and example rows. Fill in your data and upload from the Inventory page.
+              </div>
+
+              {/* Step 2 instruction */}
+              <div style={{ background: 'var(--surface)', borderRadius: 10, padding: '14px 18px', border: '1px solid var(--border)', marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+                  Step 2 — Upload your filled templates
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
+                  Go to the <strong style={{ color: 'var(--text)' }}>Inventory</strong> page, click <strong style={{ color: 'var(--text)' }}>Upload Excel</strong> on each tab and select your filled file. SafariFlow Agent will use your rates to build accurate quotes instantly.
                 </div>
               </div>
 
-              {/* Action buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                {[
-                  { icon: '📋', label: 'Add Inventory',   sub: 'Start here ←',  dest: '/inventory', primary: true },
-                  { icon: '✨', label: 'New Quote',       sub: 'Skip for now',  dest: '/quotes/new', primary: false },
-                  { icon: '⚙️', label: 'Dashboard',       sub: 'Explore first', dest: '/dashboard',  primary: false },
-                ].map(({ icon, label, sub, dest, primary }) => (
-                  <button
-                    key={dest}
-                    onClick={() => saveAndGo(dest)}
-                    disabled={saving}
-                    style={{
-                      background: primary ? 'var(--gold-dim)' : 'var(--surface)',
-                      borderRadius: 10, padding: '10px 6px',
-                      border: `2px solid ${primary ? 'var(--gold)' : 'var(--border)'}`,
-                      cursor: 'pointer', transition: 'all 0.2s',
-                      fontFamily: 'var(--font-body)', textAlign: 'center',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = primary ? 'var(--gold)' : 'var(--border)'}
-                  >
-                    <div style={{ fontSize: 20, marginBottom: 3 }}>{icon}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: primary ? 'var(--gold)' : 'var(--text)', marginBottom: 1 }}>{label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>{sub}</div>
-                  </button>
-                ))}
-              </div>
+              {/* Single action button */}
+              <button
+                onClick={() => saveAndGo('/inventory')}
+                disabled={saving}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                {saving ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Saving...</> : <>📋 Go to Inventory — Upload My Rates</>}
+              </button>
             </div>
           )}
 
@@ -360,7 +427,10 @@ export default function Onboarding({ agentId }) {
               <button
                 className="btn btn-primary"
                 onClick={() => setStep(s => s + 1)}
-                disabled={step === 1 && !form.agency_name}
+                disabled={
+                  (step === 1 && !form.agency_name) ||
+                  (step === 1 && !!phoneError)
+                }
                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
               >
                 Continue <ArrowRight size={12} />
