@@ -38,6 +38,8 @@ export default function Settings() {
 • Date changes are subject to availability and may incur supplier amendment fees.
 • An administration fee of $50 applies per amendment request.
 • A maximum of 2 amendments are permitted per confirmed booking.`,
+    bank_details: '',
+    mpesa_details: '',
   })
 
   const set = (key, val) => setSettings(s => ({ ...s, [key]: val }))
@@ -70,6 +72,8 @@ export default function Settings() {
             markup_activities_pct: a.markup_activities_pct || 25,
             cancellation_terms: a.cancellation_terms || s.cancellation_terms,
             amendment_terms: a.amendment_terms || s.amendment_terms,
+            bank_details: a.bank_details || '',
+            mpesa_details: a.mpesa_details || '',
           }))
         } else {
           setSettings(s => ({
@@ -106,6 +110,8 @@ export default function Settings() {
         markup_activities_pct: Number(settings.markup_activities_pct),
         cancellation_terms: settings.cancellation_terms,
         amendment_terms: settings.amendment_terms,
+        bank_details: settings.bank_details,
+        mpesa_details: settings.mpesa_details,
       })
       setSaved(true); setTimeout(() => setSaved(false), 3000)
     } catch (e) { setError('Failed to save. Please try again.') }
@@ -323,6 +329,36 @@ export default function Settings() {
             <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 6 }}>
               Use • at the start of each line for bullet points on the invoice.
             </div>
+          </div>
+        </div>
+
+        {/* Payment Details */}
+        <div className="card" style={{ marginBottom: 20 }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 600, marginBottom: 8, paddingBottom: 14, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            💳 Payment Details
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 16 }}>
+            These details appear on every invoice so clients know how to pay you.
+          </p>
+          <div className="form-group">
+            <label className="form-label">Bank Transfer Details</label>
+            <textarea
+              className="form-textarea"
+              value={settings.bank_details}
+              onChange={e => set('bank_details', e.target.value)}
+              style={{ minHeight: 100, fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.7 }}
+              placeholder={`Bank Name: Equity Bank Kenya\nAccount Name: Savanna Routes Travel Ltd\nAccount Number: 0123456789\nBranch: Westlands\nSWIFT Code: EQBLKENA`}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">M-Pesa Details</label>
+            <textarea
+              className="form-textarea"
+              value={settings.mpesa_details}
+              onChange={e => set('mpesa_details', e.target.value)}
+              style={{ minHeight: 70, fontFamily: 'var(--font-body)', fontSize: 13, lineHeight: 1.7 }}
+              placeholder={`M-Pesa Paybill: 123456\nAccount Number: Your Name\nOR Till Number: 789012`}
+            />
           </div>
         </div>
 
