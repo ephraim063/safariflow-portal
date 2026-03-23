@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useUser, useClerk } from '@clerk/clerk-react'
 import {
   LayoutDashboard, FileText, Plus, Users,
-  Settings, LogOut, Globe, Menu, X, Database, Sun, Moon
+  Settings, LogOut, Globe, Menu, X, Database, Sun, Moon, Receipt
 } from 'lucide-react'
 import Toast from './Toast'
 import { useToast } from '../hooks/useToast'
@@ -27,12 +27,13 @@ export default function Layout({ children }) {
   const name = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.emailAddresses?.[0]?.emailAddress
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/packages', icon: Globe, label: 'Packages' },
-    { path: '/quotes', icon: FileText, label: 'All Quotes' },
-    { path: '/quotes/new', icon: Plus, label: 'New Quote' },
-    { path: '/clients', icon: Users, label: 'Clients' },
-    { path: '/inventory', icon: Database, label: 'My Inventory' },
+    { path: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/packages',   icon: Globe,           label: 'Packages' },
+    { path: '/quotes',     icon: FileText,        label: 'All Quotes' },
+    { path: '/quotes/new', icon: Plus,            label: 'New Quote' },
+    { path: '/clients',    icon: Users,           label: 'Clients' },
+    { path: '/inventory',  icon: Database,        label: 'My Inventory' },
+    { path: '/invoices',   icon: Receipt,         label: 'Invoices' },
   ]
 
   const isActive = (path) => {
