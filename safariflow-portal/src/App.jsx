@@ -11,6 +11,7 @@ import Settings from './pages/Settings'
 import Inventory from './pages/Inventory'
 import QuoteReview from './pages/QuoteReview'
 import Onboarding from './pages/Onboarding'
+import Invoices from './pages/Invoices'
 import { supabaseFetch } from './hooks/useSupabase'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
@@ -72,6 +73,7 @@ function ProtectedApp() {
       <Route path="/quotes/review/:id" element={<Layout><QuoteReview /></Layout>} />
       <Route path="/clients" element={<Layout><Clients /></Layout>} />
       <Route path="/inventory" element={<Layout><Inventory /></Layout>} />
+      <Route path="/invoices" element={<Layout><Invoices /></Layout>} />
       <Route path="/settings" element={<Layout><Settings /></Layout>} />
     </Routes>
   )
