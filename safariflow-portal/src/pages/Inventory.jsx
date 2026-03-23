@@ -740,7 +740,9 @@ function ExtrasTab({ agentId }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Inventory() {
   const { user } = useUser()
-  const [tab, setTab] = useState('properties')
+  const urlParams = new URLSearchParams(window.location.search)
+  const defaultTab = urlParams.get('tab') || 'properties'
+  const [tab, setTab] = useState(defaultTab)
   const [agentId, setAgentId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [counts, setCounts] = useState({ properties: 0, transport: 0, parkfees: 0, extras: 0 })
