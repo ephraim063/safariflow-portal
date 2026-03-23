@@ -522,7 +522,7 @@ export default function Onboarding({ agentId }) {
 
               {/* Single action button */}
               <button
-                onClick={() => saveAndGo('/inventory')}
+                onClick={() => saveAndGo('/inventory?tab=accommodations')}
                 disabled={saving}
                 className="btn btn-primary"
                 style={{ width: '100%', padding: '14px', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
