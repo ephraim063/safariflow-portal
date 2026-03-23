@@ -138,9 +138,31 @@ export default function Settings() {
             <div className="form-group"><label className="form-label">Country</label><input className="form-input" placeholder="Kenya" value={settings.country} onChange={e => set('country', e.target.value)} /></div>
           </div>
           <div className="form-group">
-            <label className="form-label">Logo URL</label>
-            <input className="form-input" placeholder="https://youragency.com/logo.png" value={settings.logo_url} onChange={e => set('logo_url', e.target.value)} />
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 4 }}>Direct link to your agency logo. Appears on all quote PDFs and emails.</div>
+            <label className="form-label">Agency Logo</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: 10,
+                border: '2px dashed var(--border)', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--surface)', flexShrink: 0,
+              }}>
+                {settings.logo_url
+                  ? <img src={settings.logo_url} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  : <span style={{ fontSize: 24 }}>🏢</span>}
+              </div>
+              <div style={{ flex: 1 }}>
+                <input
+                  className="form-input"
+                  placeholder="https://youragency.com/logo.png"
+                  value={settings.logo_url}
+                  onChange={e => set('logo_url', e.target.value)}
+                  style={{ marginBottom: 6 }}
+                />
+                <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+                  Paste a direct link to your logo, or upload via the onboarding wizard. Appears on all quote PDFs and emails.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
