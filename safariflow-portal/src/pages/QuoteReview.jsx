@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
-import { ArrowLeft, Send, CheckCircle, AlertCircle, Download, RefreshCw, DollarSign } from 'lucide-react'
+import { ArrowLeft, Send, AlertCircle, Download, RefreshCw, DollarSign } from 'lucide-react'
 import { supabaseFetch, supabasePatch } from '../hooks/useSupabase'
 
 const FLASK_URL = import.meta.env.VITE_API_URL
-const MAKE_WEBHOOK = import.meta.env.VITE_MAKE_WEBHOOK_URL
 
 const fmtUSD = (n) => `$${Number(n || 0).toLocaleString()}`
 
@@ -20,17 +19,13 @@ const CHANGE_LABELS = {
   other: '✏️ Other',
 }
 
-// ── Cost Breakdown Table ──────────────────────────────────────────────────────
 function CostBreakdownTable({ itineraryJson }) {
   if (!itineraryJson) return null
-
   let lineItems = []
   try {
     const parsed = typeof itineraryJson === 'string' ? JSON.parse(itineraryJson) : itineraryJson
     lineItems = parsed?.line_items || []
-  } catch {
-    return null
-  }
+  } catch { return null }
 
   const hasCostData = lineItems.some(i => i.cost_total_price != null)
   if (!hasCostData || lineItems.length === 0) return null
@@ -52,7 +47,6 @@ function CostBreakdownTable({ itineraryJson }) {
         </span>
       </div>
 
-      {/* Line items table */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
@@ -86,30 +80,23 @@ function CostBreakdownTable({ itineraryJson }) {
         </table>
       </div>
 
-      {/* Summary box */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginTop: 16, padding: '16px', background: 'var(--surface-1)', borderRadius: 8, border: '1px solid var(--gold-dim)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Cost</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-main)' }}>{fmtUSD(totalCost)}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Revenue</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-main)' }}>{fmtUSD(totalSell)}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Profit</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: totalProfit >= 0 ? '#2D7A2D' : '#B03030' }}>{fmtUSD(totalProfit)}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Margin</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold)' }}>{margin}%</div>
-        </div>
+        {[
+          { label: 'Total Cost', value: fmtUSD(totalCost), color: 'var(--text-main)' },
+          { label: 'Total Revenue', value: fmtUSD(totalSell), color: 'var(--text-main)' },
+          { label: 'Total Profit', value: fmtUSD(totalProfit), color: totalProfit >= 0 ? '#2D7A2D' : '#B03030' },
+          { label: 'Margin', value: `${margin}%`, color: 'var(--gold)' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color }}>{value}</div>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function QuoteReview() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -130,7 +117,7 @@ export default function QuoteReview() {
       try {
         const agents = await supabaseFetch('agents', { clerk_user_id: `eq.${user.id}`, select: '*' })
         if (!agents.length) return
-        const a = agents[0]; setAgent(a)
+        setAgent(agents[0])
         const quotes = await supabaseFetch('quotes', { quote_number: `eq.${id}`, select: '*' })
         if (quotes.length) setQuote(quotes[0])
       } catch (e) { console.error(e) }
@@ -165,10 +152,15 @@ export default function QuoteReview() {
         },
         meta: { timestamp: new Date().toISOString(), request_id: `rev_${Date.now()}`, priority: 'high', original_quote: id, is_revision: true }
       }
-      const res = await fetch(`${FLASK_URL}/generate-pdf`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      const res = await fetch(`${FLASK_URL}/generate-pdf`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      })
       if (!res.ok) throw new Error('Regeneration failed')
       const data = await res.json()
-      await supabasePatch('quotes', { quote_number: `eq.${id}` }, { status: 'draft_revision', pdf_url: data.pdf_url, total_price_usd_cents: Math.round((data.total_price_usd || 0) * 100) })
+      await supabasePatch('quotes', { quote_number: `eq.${id}` }, {
+        status: 'draft_revision', pdf_url: data.pdf_url,
+        total_price_usd_cents: Math.round((data.total_price_usd || 0) * 100)
+      })
       const updated = await supabaseFetch('quotes', { quote_number: `eq.${id}`, select: '*' })
       if (updated.length) setQuote(updated[0])
     } catch (e) { setError('Regeneration failed: ' + e.message) }
@@ -180,7 +172,10 @@ export default function QuoteReview() {
     setSending(true); setError(null)
     try {
       await supabasePatch('quotes', { quote_number: `eq.${id}` }, { status: 'sent' })
-      await fetch(`${FLASK_URL}/approve-revision`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quote_number: id, agent_id: agent?.id }) })
+      await fetch(`${FLASK_URL}/approve-revision`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quote_number: id, agent_id: agent?.id })
+      })
       setSuccess(true)
       setTimeout(() => navigate('/quotes'), 2500)
     } catch (e) {
@@ -243,7 +238,6 @@ export default function QuoteReview() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
           <div>
-            {/* Client Change Request */}
             {changeRequest && requestedChanges.length > 0 && (
               <div className="card" style={{ marginBottom: 20, border: '1px solid rgba(200,169,110,0.3)' }}>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, marginBottom: 16, color: 'var(--gold)' }}>
@@ -274,17 +268,18 @@ export default function QuoteReview() {
               </div>
             )}
 
-            {/* AI Regenerate */}
             <div className="card" style={{ marginBottom: 20 }}>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
                 🤖 AI Revision
               </h3>
               <p style={{ fontSize: 13, color: 'var(--text-mid)', marginBottom: 16 }}>
-                Add any additional instructions for the AI before regenerating. The client's change request above will be included automatically.
+                Add any additional instructions for the AI before regenerating.
               </p>
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label className="form-label">Additional Instructions (optional)</label>
-                <textarea className="form-textarea" style={{ minHeight: 80 }} placeholder="e.g. Swap Angama Mara for Sarova Mara, keep Amboseli the same..." value={notes} onChange={e => setNotes(e.target.value)} />
+                <textarea className="form-textarea" style={{ minHeight: 80 }}
+                  placeholder="e.g. Swap Angama Mara for Sarova Mara, keep Amboseli the same..."
+                  value={notes} onChange={e => setNotes(e.target.value)} />
               </div>
               <button className="btn btn-secondary" onClick={handleRegenerate} disabled={regenerating}>
                 {regenerating ? <><span className="spinner" style={{ width: 14, height: 14 }} />AI Rebuilding Quote...</> : <><RefreshCw size={14} />Regenerate with AI</>}
@@ -292,7 +287,6 @@ export default function QuoteReview() {
               {regenerating && <div style={{ fontSize: 12, color: 'var(--text-dim)', marginTop: 8 }}>This takes 30–60 seconds. Please wait...</div>}
             </div>
 
-            {/* Current Quote Details */}
             <div className="card">
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, marginBottom: 16 }}>
                 Current Quote Details
@@ -313,11 +307,9 @@ export default function QuoteReview() {
               ))}
             </div>
 
-            {/* Agent Cost Breakdown — reads from itinerary_json */}
             <CostBreakdownTable itineraryJson={quote.itinerary_json} />
           </div>
 
-          {/* Right sidebar */}
           <div>
             <div className="card" style={{ position: 'sticky', top: 20 }}>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
@@ -325,14 +317,16 @@ export default function QuoteReview() {
               </h3>
 
               {quote.pdf_url && (
-                <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }} onClick={() => window.open(quote.pdf_url, '_blank')}>
+                <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }}
+                  onClick={() => window.open(quote.pdf_url, '_blank')}>
                   <Download size={14} /> Preview Quote PDF
                 </button>
               )}
 
               {quote.cost_breakdown_url && (
-                <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: 12, borderColor: 'var(--gold)', color: 'var(--gold)' }} onClick={() => window.open(quote.cost_breakdown_url, '_blank')}>
-                  <DollarSign size={14} /> View Cost Breakdown
+                <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', marginBottom: 12, borderColor: 'var(--gold)', color: 'var(--gold)' }}
+                  onClick={() => window.open(quote.cost_breakdown_url, '_blank')}>
+                  <DollarSign size={14} /> View Cost Breakdown PDF
                 </button>
               )}
 
@@ -343,11 +337,14 @@ export default function QuoteReview() {
               <div className="gold-divider" />
 
               <div style={{ background: 'var(--gold-dim)', borderRadius: 8, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: 'var(--gold)' }}>
-                🤖 Click <strong>Regenerate with AI</strong> to have AI rebuild the quote based on client's changes. Then preview the PDF and approve.
+                🤖 Click <strong>Regenerate with AI</strong> to rebuild based on client's changes. Then preview and approve.
               </div>
 
-              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px' }} onClick={handleApproveAndSend} disabled={sending}>
-                {sending ? <><span className="spinner" style={{ width: 16, height: 16, borderTopColor: 'var(--night)' }} />Sending...</> : <><Send size={16} />Approve & Send to Client</>}
+              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                onClick={handleApproveAndSend} disabled={sending}>
+                {sending
+                  ? <><span className="spinner" style={{ width: 16, height: 16, borderTopColor: 'var(--night)' }} />Sending...</>
+                  : <><Send size={16} />Approve & Send to Client</>}
               </button>
 
               <div style={{ fontSize: 11, color: 'var(--text-dim)', textAlign: 'center', marginTop: 8 }}>
